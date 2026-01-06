@@ -14,7 +14,3 @@ CMakeUserPresets.json
 
 # Build folder
 /build
-
-# Visual studio stuff
-/.vscode
-main
