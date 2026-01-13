@@ -22,6 +22,10 @@ file(GLOB_RECURSE GAME_SOURCES
     "${CMAKE_CURRENT_SOURCE_DIR}/Game/*.hpp"
 )
 
+list(APPEND GAME_SOURCES
+    "${CMAKE_CURRENT_SOURCE_DIR}/main.cpp"    
+)
+
 # 
 add_executable(${EXECUTABLE_NAME} ${GAME_SOURCES})
 
