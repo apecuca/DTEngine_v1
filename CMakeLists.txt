@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.10.0)
+cmake_minimum_required(VERSION 4.2.1)
 
 # Variables
 set(EXECUTABLE_NAME DesktopGameEngine)
