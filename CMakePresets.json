@@ -1,17 +1,43 @@
 {
-    "version": 8,
-    "configurePresets": [
-        {
-            "name": "GCC 13.3.0 x86_64-linux-gnu",
-            "displayName": "GCC 13.3.0 x86_64-linux-gnu",
-            "description": "Using compilers: C = /usr/bin/gcc, CXX = /usr/bin/g++",
-            "binaryDir": "${sourceDir}/build/${presetName}",
-            "cacheVariables": {
-                "CMAKE_INSTALL_PREFIX": "${sourceDir}/build/${presetName}/install",
-                "CMAKE_C_COMPILER": "/usr/bin/gcc",
-                "CMAKE_CXX_COMPILER": "/usr/bin/g++",
-                "CMAKE_BUILD_TYPE": "Debug"
-            }
-        }
-    ]
+  "version": 6,
+  "configurePresets": [
+    {
+      "name": "mingw-gcc-15-release",
+      "displayName": "MinGW GCC 15.2.0 Release",
+      "description": "Build Release usando GCC 15.2.0 (x86-w64-mingw32) com vcpkg",
+      "generator": "MinGW Makefiles",
+      "binaryDir": "${sourceDir}/build/mingw-release",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Release",
+        "CMAKE_C_COMPILER": "C:/mingw64/bin/x86_64-w64-mingw32-gcc.exe",
+        "CMAKE_CXX_COMPILER": "C:/mingw64/bin/x86_64-w64-mingw32-g++.exe",
+        "CMAKE_TOOLCHAIN_FILE": "C:/vcpkg/scripts/buildsystems/vcpkg.cmake",
+        "VCPKG_TARGET_TRIPLET": "x64-mingw-dynamic"
+      }
+    },
+    {
+      "name": "mingw-gcc-15-debug",
+      "displayName": "MinGW GCC 15.2.0 Debug",
+      "description": "Build Debug usando GCC 15.2.0 (x86-w64-mingw32) com vcpkg",
+      "generator": "MinGW Makefiles",
+      "binaryDir": "${sourceDir}/build/mingw-debug",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Debug",
+        "CMAKE_TOOLCHAIN_FILE": "C:/vcpkg/scripts/buildsystems/vcpkg.cmake",
+        "CMAKE_C_COMPILER": "C:/mingw64/bin/x86_64-w64-mingw32-gcc.exe",
+        "CMAKE_CXX_COMPILER": "C:/mingw64/bin/x86_64-w64-mingw32-g++.exe",
+        "VCPKG_TARGET_TRIPLET": "x64-mingw-dynamic"
+      }
+    }
+  ],
+  "buildPresets": [
+    {
+      "name": "mingw-gcc-15-release",
+      "configurePreset": "mingw-gcc-15-release"
+    },
+    {
+      "name": "mingw-gcc-15-debug",
+      "configurePreset": "mingw-gcc-15-debug"
+    }
+  ]
 }
