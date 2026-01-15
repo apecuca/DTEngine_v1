@@ -3,13 +3,16 @@
 #pragma once
 
 #include <iostream>
+#include <memory>
+
+namespace DTEngine { class Window; }
 
 namespace DTEngine {
 class Engine
 {
 public:
     Engine();
-    ~Engine() = default;
+    ~Engine();
 
 public:
     // Initialized the main window
@@ -17,6 +20,15 @@ public:
 
     // Called once to start, runs the engine's main loop
     void Run();
+
+private:
+    // Returns if the engine should stop running
+    bool ShouldStop();
+
+private:
+    std::unique_ptr<DTEngine::Window> window;
+
+    bool running;
 };
 }
 

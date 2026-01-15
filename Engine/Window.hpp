@@ -1,0 +1,27 @@
+#ifndef INCLUDED_WINDOW_H
+#define INCLUDED_WINDOW_H
+#pragma once
+
+#include <iostream>
+
+class GLFWwindow;
+
+namespace DTEngine {
+class Window
+{
+public:
+    ~Window();
+    Window(int _width, int _height, std::string _name);
+
+    void RenderCycle();
+
+    bool IsRunning();
+
+private:
+    GLFWwindow* winPtr;
+
+    int width, height;
+};
+}
+
+#endif
