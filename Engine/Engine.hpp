@@ -5,9 +5,11 @@
 #include <iostream>
 #include <memory>
 
-namespace DTEngine { class Window; }
-
 namespace DTEngine {
+
+class Window;
+class Rendering;
+
 class Engine
 {
 public:
@@ -27,6 +29,7 @@ private:
 
 private:
     std::unique_ptr<DTEngine::Window> window;
+    std::unique_ptr<DTEngine::Rendering> rendering;
 
     bool running;
 };
