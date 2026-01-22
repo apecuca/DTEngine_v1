@@ -1,5 +1,7 @@
 cmake_minimum_required(VERSION 3.31.7)
 
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+
 project(Engine LANGUAGES C CXX)
 
 file(GLOB_RECURSE ENGINE_SOURCES
@@ -7,16 +9,16 @@ file(GLOB_RECURSE ENGINE_SOURCES
     "${CMAKE_CURRENT_SOURCE_DIR}/*.hpp"
 )
 
+
 add_library(Engine STATIC ${ENGINE_SOURCES})
 
-find_package(glfw3 CONFIG REQUIRED)
-find_package(glad CONFIG REQUIRED)
+# Internal directory
+add_subdirectory(Internal)
 
 target_include_directories(Engine PUBLIC
     ${CMAKE_CURRENT_SOURCE_DIR}
 )
 
-target_link_libraries(Engine PUBLIC
-    glad::glad
-    glfw
-)
+# Link libraries
+target_link_libraries(Engine PRIVATE 
+    Internal)
