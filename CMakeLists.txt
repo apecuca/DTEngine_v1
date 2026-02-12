@@ -29,11 +29,8 @@ list(APPEND GAME_SOURCES
 # 
 add_executable(${EXECUTABLE_NAME} ${GAME_SOURCES})
 
-# Include source dir to target
-target_include_directories(Engine PUBLIC
-    ${CMAKE_CURRENT_SOURCE_DIR}
-)
-
 # Link libraries
-target_link_libraries(${EXECUTABLE_NAME} PUBLIC 
-    Engine)
+target_link_libraries(${EXECUTABLE_NAME} 
+    PRIVATE
+        Engine
+)

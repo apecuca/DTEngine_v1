@@ -1,6 +1,6 @@
 #include <iostream>
 
-#include "Engine/Engine.hpp"
+#include "Engine.hpp"
 #include "Game/Game.hpp"
 
 int main(int, char**){

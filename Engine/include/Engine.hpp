@@ -28,7 +28,6 @@ private:
     bool ShouldStop();
 
 private:
-    std::unique_ptr<DTEngine::Window> window;
     std::unique_ptr<DTEngine::Rendering> rendering;
 
     bool running;

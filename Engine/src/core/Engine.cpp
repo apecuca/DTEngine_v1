@@ -1,7 +1,8 @@
 #include "Engine.hpp"
 
-#include "Window.hpp"
-#include "Internal/Rendering.hpp"
+#include "Engine/Window.hpp"
+#include "GLFW/glfw3.h"
+#include "rendering/Rendering.hpp"
 
 using namespace DTEngine;
 
@@ -20,25 +21,26 @@ Engine::Engine()
 
 void Engine::InitWindow(int width, int height, std::string name)
 {
-    window = std::make_unique<DTEngine::Window>(width, height, name);
+    rendering->InitWindow(width, height, name);
+    //window = std::make_unique<DTEngine::Window>(width, height, name);
 }
 
 void Engine::Run()
 {
-    if (window == nullptr)
+    if (!rendering->IsWindowRunning())
         throw std::string("Window was not initialized.");
 
     while (!ShouldStop()) {
-        window->RenderCycle();
+        rendering->RenderCycle();
     }
 }
 
 bool Engine::ShouldStop()
 {
-    if (window == nullptr)
+    if (rendering == nullptr)
         return true;
 
-    if (running && window->IsRunning())
+    if (running && rendering->IsWindowRunning())
         return false;
     
     return true;

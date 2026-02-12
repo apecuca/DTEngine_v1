@@ -5,20 +5,25 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 project(Engine LANGUAGES C CXX)
 
 file(GLOB_RECURSE ENGINE_SOURCES
-    "${CMAKE_CURRENT_SOURCE_DIR}/*.cpp"
-    "${CMAKE_CURRENT_SOURCE_DIR}/*.hpp"
+    "${CMAKE_CURRENT_SOURCE_DIR}/src/*.hpp"
+    "${CMAKE_CURRENT_SOURCE_DIR}/src/*.cpp"
 )
-
 
 add_library(Engine STATIC ${ENGINE_SOURCES})
 
-# Internal directory
-add_subdirectory(Internal)
+find_package(glfw3 CONFIG REQUIRED)
+find_package(glad CONFIG REQUIRED)
 
-target_include_directories(Engine PUBLIC
-    ${CMAKE_CURRENT_SOURCE_DIR}
+target_include_directories(Engine
+    PUBLIC
+        "${CMAKE_CURRENT_SOURCE_DIR}/include"
+    PRIVATE
+        "${CMAKE_CURRENT_SOURCE_DIR}/src"
+        "${CMAKE_CURRENT_SOURCE_DIR}/include/Engine"
 )
 
-# Link libraries
-target_link_libraries(Engine PRIVATE 
-    Internal)
+target_link_libraries(Engine 
+    PRIVATE
+        glad::glad
+        glfw
+)
