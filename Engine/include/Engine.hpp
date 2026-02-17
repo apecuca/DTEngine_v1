@@ -9,6 +9,7 @@ namespace DTEngine {
 
 class Window;
 class Rendering;
+class World;
 
 class Engine
 {
@@ -20,6 +21,8 @@ public:
     // Initialized the main window
     void InitWindow(int width, int height, std::string name);
 
+    void LoadWorld(std::unique_ptr<World> world);
+
     // Called once to start, runs the engine's main loop
     void Run();
 
@@ -28,7 +31,8 @@ private:
     bool ShouldStop();
 
 private:
-    std::unique_ptr<DTEngine::Rendering> rendering;
+    std::unique_ptr<Rendering> rendering;
+    std::unique_ptr<World> activeWorld;
 
     bool running;
 };

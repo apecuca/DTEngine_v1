@@ -12,8 +12,7 @@ class Window
 public:
     ~Window();
     Window(int _width, int _height, std::string _name);
-
-    //void RenderCycle();
+    
     void Clear();
     void SwapBuffers();
     void ReadInputs();

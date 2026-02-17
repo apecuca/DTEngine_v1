@@ -3,6 +3,7 @@
 #include "Engine/Window.hpp"
 #include "GLFW/glfw3.h"
 #include "rendering/Rendering.hpp"
+#include "World.hpp"
 
 using namespace DTEngine;
 
@@ -44,4 +45,9 @@ bool Engine::ShouldStop()
         return false;
     
     return true;
+}
+
+void Engine::LoadWorld(std::unique_ptr<World> world)
+{
+    activeWorld = std::move(world);
 }
