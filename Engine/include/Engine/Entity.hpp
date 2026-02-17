@@ -10,7 +10,7 @@ namespace DTEngine
 class Entity
 {
 public:
-    using ID = std::uint64_t;
+    using ID = std::uint32_t;
 
     ~Entity();
     Entity();
