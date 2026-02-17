@@ -13,6 +13,7 @@ public:
     Vector2(float _x, float _y);
 
 public:
+    // Calculates the distance between two vectors
     static float Distance(const Vector2& a, const Vector2& b);
 
 public:
@@ -29,6 +30,7 @@ public:
     Vector3(float _x, float _y, float _z);
 
 public:
+    // Calculates the distance between two vectors
     static float Distance(const Vector3& a, const Vector3& b);
 
 public:

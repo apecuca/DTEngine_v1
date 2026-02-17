@@ -12,3 +12,13 @@ GameObject::GameObject() :
 {
     //
 }
+
+void GameObject::MarkForDestruction()
+{
+    markedForDestruction = true;
+}
+
+bool GameObject::GetMarkedForDestruction() const
+{
+    return markedForDestruction;
+}

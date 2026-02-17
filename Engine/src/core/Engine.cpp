@@ -33,6 +33,9 @@ void Engine::Run()
 
     while (!ShouldStop()) {
         rendering->RenderCycle();
+
+        if (activeWorld != nullptr)
+            activeWorld->ProcessDestroyQueue();
     }
 }
 
@@ -47,7 +50,16 @@ bool Engine::ShouldStop()
     return true;
 }
 
-void Engine::LoadWorld(std::unique_ptr<World>& world)
+World* Engine::LoadWorld(std::unique_ptr<World>& world)
 {
-    activeWorld = std::move(world);
+    activeWorld.reset(world.release());
+    return activeWorld.get();
+}
+
+World* Engine::GetActiveWorld()
+{
+    if (activeWorld != nullptr)
+        return activeWorld.get();
+
+    return nullptr;
 }
