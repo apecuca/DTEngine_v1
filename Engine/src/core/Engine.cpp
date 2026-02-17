@@ -47,7 +47,7 @@ bool Engine::ShouldStop()
     return true;
 }
 
-void Engine::LoadWorld(std::unique_ptr<World> world)
+void Engine::LoadWorld(std::unique_ptr<World>& world)
 {
     activeWorld = std::move(world);
 }
