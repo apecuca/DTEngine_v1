@@ -13,7 +13,7 @@ class GameObject : public Entity
 friend class World;
 
 public:
-    ~GameObject();
+    virtual ~GameObject();
     GameObject();
 
 public:
@@ -33,6 +33,7 @@ private:
 
 public:
     Vector2 position;
+    Vector2 scale;
     GameObject* parent;
 
 private:

@@ -14,7 +14,7 @@ class Entity
 public:
     using ID = std::uint32_t;
 
-    ~Entity();
+    virtual ~Entity();
     Entity();
 
     bool operator == (const Entity& other) const {
