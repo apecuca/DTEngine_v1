@@ -1,6 +1,5 @@
 #include <World.hpp>
 
-#include <iostream>
 #include <algorithm>
 
 #include "GameObject.hpp"
@@ -12,7 +11,8 @@ World::~World()
     //
 }
 
-World::World()
+World::World() :
+    GameObject()
 {
     //
 }
@@ -20,6 +20,7 @@ World::World()
 GameObject* World::Instantiate()
 {
     std::unique_ptr<GameObject> newObj = std::make_unique<GameObject>();
+    newObj->SetParent(this);
     GameObject* raw = newObj.get();
     gameObjects.emplace_back(std::move(newObj));
 

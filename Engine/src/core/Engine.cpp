@@ -5,6 +5,8 @@
 #include "rendering/Rendering.hpp"
 #include "World.hpp"
 
+std::unique_ptr<DTEngine::World> DTEngine::Engine::activeWorld;
+
 using namespace DTEngine;
 
 Engine::~Engine()

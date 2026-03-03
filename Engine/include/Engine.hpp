@@ -25,7 +25,7 @@ public:
     World* LoadWorld(std::unique_ptr<World>& world);
 
     // Returns a pointer to the active world
-    World* GetActiveWorld();
+    static World* GetActiveWorld();
 
     // Called once to start, runs the engine's main loop
     void Run();
@@ -36,7 +36,7 @@ private:
 
 private:
     std::unique_ptr<Rendering> rendering;
-    std::unique_ptr<World> activeWorld;
+    static std::unique_ptr<World> activeWorld;
 
     bool running;
 };
