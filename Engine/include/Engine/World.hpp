@@ -10,6 +10,8 @@ namespace DTEngine
 
 class World final  : public GameObject
 {
+friend class Engine;
+
 public:
     ~World();
     World();
@@ -20,7 +22,8 @@ public:
     // Destroys an object instantiated in the world
     void Destroy(const GameObject* obj);
 
-    // Processes the destruction queue, don't call this manually
+private:
+    // Processes the destruction queue
     void ProcessDestroyQueue();
 
 private:

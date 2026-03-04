@@ -10,6 +10,8 @@ class GameObject;
 
 class Component : public Entity 
 {
+friend class GameObject;
+
 public:
     virtual ~Component();
     Component(GameObject& _gameObject);
@@ -23,6 +25,9 @@ public:
 
 public:
     GameObject& gameObject;
+
+private:
+    bool markedForDestruction = false;
 
 };
 

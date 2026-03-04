@@ -48,4 +48,7 @@ void World::ProcessDestroyQueue()
                 return obj->GetMarkedForDestruction();
             }),
         gameObjects.end());
+
+    for (auto& obj : gameObjects)
+        obj->ProcessComponentDestructionQueue();
 }

@@ -2,6 +2,7 @@
 
 #include "World.hpp"
 #include <algorithm>
+#include "Component.hpp"
 
 using namespace DTEngine;
 
@@ -22,6 +23,17 @@ GameObject::GameObject() :
 void GameObject::MarkForDestruction()
 {
     markedForDestruction = true;
+}
+
+void GameObject::ProcessComponentDestructionQueue()
+{
+    components.erase(
+        std::remove_if(components.begin(), components.end(),
+            [](const std::unique_ptr<Component>& comp)
+            {
+                return comp->markedForDestruction;
+            }),
+        components.end());
 }
 
 bool GameObject::GetMarkedForDestruction() const
