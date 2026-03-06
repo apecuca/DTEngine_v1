@@ -100,3 +100,15 @@ bool GameObject::HasChild(GameObject* obj, int& outPosition)
 
     return false;
 } 
+
+void GameObject::InternalStart()
+{
+    for (auto& comp : components)
+        comp->Start();
+}
+
+void GameObject::InternalUpdate()
+{
+    for (auto& comp : components)
+        comp->Update();
+}

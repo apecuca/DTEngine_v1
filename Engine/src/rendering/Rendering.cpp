@@ -4,6 +4,21 @@
 
 using namespace DTEngine;
 
+Rendering::~Rendering()
+{
+    //
+}
+
+Rendering::Rendering()
+{
+    //
+}
+
+bool Rendering::Init()
+{
+    return true;
+}
+
 void Rendering::InitWindow(int width, int height, std::string name)
 {
     window = std::make_unique<DTEngine::Window>(width, height, name);

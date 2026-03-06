@@ -16,7 +16,7 @@ public:
     virtual ~Component();
     Component(GameObject& _gameObject);
 
-public:
+private:
     // Called before the first frame is rendered
     virtual void Start() {}
 

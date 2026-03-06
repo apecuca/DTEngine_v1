@@ -26,9 +26,11 @@ private:
     // Processes the destruction queue
     void ProcessDestroyQueue();
 
+    void WorldStart();
+    void WorldUpdate();
+
 private:
     std::vector<std::unique_ptr<GameObject>> gameObjects;
-
 };
 
 }

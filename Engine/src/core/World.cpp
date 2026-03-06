@@ -52,3 +52,15 @@ void World::ProcessDestroyQueue()
     for (auto& obj : gameObjects)
         obj->ProcessComponentDestructionQueue();
 }
+
+void World::WorldStart()
+{
+    for (auto& obj : gameObjects)
+        obj->InternalStart();
+}
+
+void World::WorldUpdate()
+{
+    for (auto& obj : gameObjects)
+        obj->InternalUpdate();
+}

@@ -23,9 +23,9 @@ public:
     void SetParent(GameObject* obj);
     GameObject* GetParent();
 
-    /*
+    //
     // Component logic
-    */
+    //
 
     template <typename T>
     requires std::derived_from<T, Component>
@@ -49,8 +49,8 @@ public:
     T* GetComponent()
     {
         for (auto& component : components)
-            if (auto casted = dynamic_cast<T*>(component.get()))
-                return casted;
+            if (typeid(*component) == typeid(T))
+                return dynamic_cast<T*>(component.get());
 
         return nullptr;
     }
@@ -60,8 +60,8 @@ public:
     const T* GetComponent() const
     {
         for (const auto& component : components)
-            if (auto casted = dynamic_cast<const T*>(component.get()))
-                return casted;
+            if (typeid(*component) == typeid(T))
+                return dynamic_cast<T*>(component.get());
 
         return nullptr;
     }
@@ -103,6 +103,9 @@ private:
     void AddChild(GameObject* obj);
     void RemoveChild(GameObject* obj);
     bool HasChild(GameObject* obj, int& outPosition);
+
+    void InternalStart();
+    void InternalUpdate();
 
 public:
     Vector2 position;

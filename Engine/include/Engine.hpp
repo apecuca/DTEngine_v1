@@ -8,8 +8,8 @@
 namespace DTEngine {
 
 class Window;
-class Rendering;
 class World;
+class InternalWorksManager;
 
 class Engine
 {
@@ -25,7 +25,7 @@ public:
     World* LoadWorld(std::unique_ptr<World>& world);
 
     // Returns a pointer to the active world
-    static World* GetActiveWorld();
+    //World* GetActiveWorld();
 
     // Called once to start, runs the engine's main loop
     void Run();
@@ -35,8 +35,10 @@ private:
     bool ShouldStop();
 
 private:
-    std::unique_ptr<Rendering> rendering;
-    static std::unique_ptr<World> activeWorld;
+    //std::unique_ptr<Rendering> rendering;
+    std::unique_ptr<InternalWorksManager> internalWorks;
+
+    std::unique_ptr<World> activeWorld;
 
     bool running;
 };
