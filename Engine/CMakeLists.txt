@@ -27,3 +27,16 @@ target_link_libraries(Engine
         glad::glad
         glfw
 )
+
+# ---- Assets ----
+
+set(ASSETS_SOURCE "${CMAKE_CURRENT_SOURCE_DIR}/assets")
+set(ASSETS_DEST "$<TARGET_FILE_DIR:Engine>/assets")
+
+add_custom_target(copy_assets ALL
+    COMMAND ${CMAKE_COMMAND} -E remove_directory ${ASSETS_DEST}
+    COMMAND ${CMAKE_COMMAND} -E copy_directory ${ASSETS_SOURCE} ${ASSETS_DEST}
+    COMMENT "Refreshing assets folder"
+)
+
+add_dependencies(copy_assets Engine)
