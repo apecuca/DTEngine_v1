@@ -20,6 +20,7 @@ set(ENGINE_HEADERS
     ${CMAKE_CURRENT_SOURCE_DIR}/src/system/WorldSystem.hpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/system/InputSystem.hpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/system/PhysicsSystem.hpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/system/PoolSystem.hpp
 )
 
 set(ENGINE_SOURCES
@@ -54,6 +55,7 @@ set(ENGINE_SOURCES
     ${CMAKE_CURRENT_SOURCE_DIR}/src/system/WorldSystem.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/system/InputSystem.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/system/PhysicsSystem.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/system/PoolSystem.cpp
 )
 
 # ---- library ----

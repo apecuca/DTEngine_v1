@@ -8,6 +8,7 @@
 namespace DTEngine
 {
 
+class PoolSystem;
 class RenderingSystem;
 class WorldSystem;
 class PathSystem;
@@ -28,6 +29,9 @@ public:
     template <typename T>
     static T* GetSystem()
     {
+        if (instance == nullptr)
+            return nullptr;
+
         auto it = instance->systems.find(typeid(T));
         if (it != instance->systems.end())
             return static_cast<T*>(it->second);
@@ -44,6 +48,7 @@ private:
 
     std::unordered_map<std::type_index, InternalSystem*> systems;
 
+    std::unique_ptr<PoolSystem> poolSystem;
     std::unique_ptr<RenderingSystem> renderingSystem;
     std::unique_ptr<WorldSystem> worldSystem;
     std::unique_ptr<PathSystem> pathSystem;

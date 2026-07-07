@@ -5,6 +5,7 @@
 #include <DTEngine/BoxCollider.hpp>
 #include "system/SystemRegistry.hpp"
 #include "system/PhysicsSystem.hpp"
+#include "system/PoolSystem.hpp"
 
 #include <algorithm>
 #include <iostream>
@@ -14,14 +15,17 @@ using namespace DTEngine;
 
 GameObject::~GameObject()
 {
-    if (parent != nullptr)
-        parent->RemoveChild(this);
+    // Components live in the global pool; release them with their owner
+    PoolSystem* pool = SystemRegistry::GetSystem<PoolSystem>();
+    if (pool != nullptr) {
+        for (auto& ref : componentRefs)
+            if (ref.IsAlive())
+                pool->Release(ref.ptr);
+    }
 }
 
 GameObject::GameObject() :
     Entity(),
-    originalParent(nullptr),
-    parent(nullptr),
     position(0.0f, 0.0f),
     scale(1.0f, 1.0f),
     clickable(true)
@@ -31,24 +35,38 @@ GameObject::GameObject() :
 
 void GameObject::MarkForDestruction()
 {
+    if (markedForDestruction)
+        return;
+
     markedForDestruction = true;
 
-    for (auto& slot : componentSlots) {
-        if (slot.component == nullptr) continue;
-        slot.component->markedForDestruction = true;
+    for (auto& ref : componentRefs) {
+        if (!ref.IsAlive()) continue;
+        static_cast<Component*>(ref.ptr)->markedForDestruction = true;
+    }
+
+    // Destruction cascades down the hierarchy
+    for (auto& child : children) {
+        GameObject* childObject = child.Get();
+        if (childObject != nullptr)
+            childObject->MarkForDestruction();
     }
 }
 
 void GameObject::ProcessComponentDestructionQueue()
 {
-    for (auto& slot : componentSlots) {
-        if (slot.component == nullptr) continue;
+    PoolSystem* pool = SystemRegistry::GetSystem<PoolSystem>();
+    if (pool == nullptr)
+        return;
 
-        if (slot.component->markedForDestruction) {
-            slot.component.reset();
-            slot.generation++;
-        }
+    for (auto& ref : componentRefs) {
+        if (!ref.IsAlive()) continue;
+
+        if (static_cast<Component*>(ref.ptr)->markedForDestruction)
+            pool->Release(ref.ptr);
     }
+
+    std::erase_if(componentRefs, [](const EntitySlotRef& ref) { return !ref.IsAlive(); });
 }
 
 bool GameObject::GetMarkedForDestruction() const
@@ -56,49 +74,70 @@ bool GameObject::GetMarkedForDestruction() const
     return markedForDestruction;
 }
 
-bool GameObject::GetAvailableSlot(int& position)
+EntitySlotRef GameObject::AddComponentImpl(std::unique_ptr<Component> component)
 {
-    position = -1;
-    for (int i = 0; i < componentSlots.size(); i++) {
-        ComponentSlot& slot = componentSlots.at(i);
-        if (slot.component == nullptr) {
-            position = i;
-            return true;
+    PoolSystem* pool = SystemRegistry::GetSystem<PoolSystem>();
+
+    EntitySlotRef ref = pool->Acquire(std::move(component));
+    componentRefs.emplace_back(ref);
+
+    return ref;
+}
+
+EntitySlotRef GameObject::FindComponentImpl(const std::type_info& type) const
+{
+    EntitySlotRef found;
+
+    for (const auto& ref : componentRefs) {
+        if (!ref.IsAlive()) continue;
+
+        if (typeid(*ref.ptr) == type)
+            found = ref;
+    }
+
+    return found;
+}
+
+EntityHandle<GameObject> GameObject::GetHandle() const
+{
+    return EntityHandle<GameObject>(selfRef);
+}
+
+void GameObject::SetParent(const EntityHandle<GameObject>& newParent)
+{
+    GameObject* target = newParent.Get();
+
+    // Reject self-parenting and hierarchy cycles before mutating anything;
+    // with cascading destruction a cycle would recurse forever
+    for (GameObject* ancestor = target; ancestor != nullptr; ancestor = ancestor->parent.Get()) {
+        if (ancestor == this) {
+            std::cerr << "[GameObject] SetParent: would create a hierarchy cycle\n";
+            return;
         }
     }
 
-    return false;
-}
-
-void GameObject::SetParent(GameObject* obj)
-{
-    if (originalParent == nullptr) {
-        if (obj == nullptr)
-            return;
-        
-        originalParent = obj;
-        parent = originalParent;
-    }
-    else if (*obj == *parent)
+    if (parent == newParent)
         return;
 
-    // Replace with world gameobject
-    if (obj == nullptr)
-        obj = originalParent;
+    GameObject* current = parent.Get();
+    if (current != nullptr)
+        current->RemoveChild(GetHandle());
 
-    if (parent != nullptr)
-        parent->RemoveChild(this);
+    if (target == nullptr) {
+        parent = EntityHandle<GameObject>{};
+        return;
+    }
 
-    parent = obj;
-    parent->AddChild(this);
+    parent = newParent;
+    target->AddChild(GetHandle());
 }
 
-GameObject* GameObject::GetParent()
+EntityHandle<GameObject> GameObject::GetParent() const
 {
     return parent;
 }
 
-void GameObject::AddChild(GameObject* obj)
+void GameObject::AddChild(const EntityHandle<GameObject>& obj)
 {
     int position;
     if (HasChild(obj, position))
@@ -107,7 +146,7 @@ void GameObject::AddChild(GameObject* obj)
     children.emplace_back(obj);
 }
 
-void GameObject::RemoveChild(GameObject* obj)
+void GameObject::RemoveChild(const EntityHandle<GameObject>& obj)
 {
     int position;
     if (!HasChild(obj, position))
@@ -116,27 +155,47 @@ void GameObject::RemoveChild(GameObject* obj)
     children.erase(children.begin() + position);
 }
 
-GameObject* GameObject::ChildAt(int position)
+void GameObject::PruneChildren()
 {
+    std::erase_if(children, [](const EntityHandle<GameObject>& child) {
+        return !child.IsValid();
+    });
+}
+
+int GameObject::ChildCount()
+{
+    PruneChildren();
+
+    return static_cast<int>(children.size());
+}
+
+EntityHandle<GameObject> GameObject::ChildAt(int position)
+{
+    PruneChildren();
+
     if (position < 0 || position >= (int)children.size())
-        throw std::runtime_error("Child position" + std::to_string(position) + "out of bounds");
+        throw std::runtime_error("Child position " + std::to_string(position) + " out of bounds");
 
     return children.at(position);
 }
 
-bool GameObject::HasChild(GameObject* obj, int& outPosition)
+bool GameObject::HasChild(const EntityHandle<GameObject>& obj, int& outPosition)
 {
+    PruneChildren();
+
     outPosition = -1;
+    if (obj == nullptr)
+        return false;
 
     for (int i = 0; i < children.size(); i++) {
-        if (*children[i] == *obj) {
+        if (children[i] == obj) {
             outPosition = i;
             return true;
         }
     }
 
     return false;
-} 
+}
 
 void GameObject::SetLayer(const std::string& layerName)
 {
@@ -157,81 +216,83 @@ std::string GameObject::GetLayer() const
 
 void GameObject::InternalAwake()
 {
-    for (auto& slot : componentSlots) {
-        if (slot.component == nullptr) continue;
-        slot.component->Awake();
+    for (auto& ref : componentRefs) {
+        if (!ref.IsAlive()) continue;
+        static_cast<Component*>(ref.ptr)->Awake();
     }
 }
 
 void GameObject::InternalStart()
 {
-    for (auto& slot : componentSlots) {
-        if (slot.component == nullptr) continue;
-        slot.component->Start();
+    for (auto& ref : componentRefs) {
+        if (!ref.IsAlive()) continue;
+        static_cast<Component*>(ref.ptr)->Start();
     }
 }
 void GameObject::InternalFixedUpdate()
 {
-    for (auto& slot : componentSlots) {
-        if (slot.component == nullptr) continue;
-        slot.component->FixedUpdate();
+    for (auto& ref : componentRefs) {
+        if (!ref.IsAlive()) continue;
+        static_cast<Component*>(ref.ptr)->FixedUpdate();
     }
 }
 
 void GameObject::InternalUpdate()
 {
-    for (auto& slot : componentSlots) {
-        if (slot.component == nullptr) continue;
-        slot.component->Update();
+    for (auto& ref : componentRefs) {
+        if (!ref.IsAlive()) continue;
+        static_cast<Component*>(ref.ptr)->Update();
     }
 }
 
 void GameObject::InternalLateUpdate()
 {
-    for (auto& slot : componentSlots) {
-        if (slot.component == nullptr) continue;
-        slot.component->LateUpdate();
+    for (auto& ref : componentRefs) {
+        if (!ref.IsAlive()) continue;
+        static_cast<Component*>(ref.ptr)->LateUpdate();
     }
 }
 
 void GameObject::ReceiveCollisionMessage(Collision& collision)
 {
-    for (auto& c : componentSlots) {
-        if (c.component != nullptr) {
-            switch (collision.type) {
-                case CollisionType::ENTER:
-                    c.component->OnCollisionEnter(collision);
-                    break;
+    for (auto& ref : componentRefs) {
+        if (!ref.IsAlive()) continue;
 
-                case CollisionType::STAY:
-                    c.component->OnCollisionStay(collision);
-                    break;
+        Component* component = static_cast<Component*>(ref.ptr);
+        switch (collision.type) {
+            case CollisionType::ENTER:
+                component->OnCollisionEnter(collision);
+                break;
 
-                case CollisionType::EXIT:
-                    c.component->OnCollisionExit(collision);
-                    break;
-            }
+            case CollisionType::STAY:
+                component->OnCollisionStay(collision);
+                break;
+
+            case CollisionType::EXIT:
+                component->OnCollisionExit(collision);
+                break;
         }
     }
 }
 
 void GameObject::ReceiveSensorMessage(Collision& collision)
 {
-    for (auto& c : componentSlots) {
-        if (c.component != nullptr) {
-            switch (collision.type) {
-                case CollisionType::ENTER:
-                    c.component->OnSensorEnter(collision);
-                    break;
+    for (auto& ref : componentRefs) {
+        if (!ref.IsAlive()) continue;
 
-                case CollisionType::STAY:
-                    c.component->OnSensorStay(collision);
-                    break;
+        Component* component = static_cast<Component*>(ref.ptr);
+        switch (collision.type) {
+            case CollisionType::ENTER:
+                component->OnSensorEnter(collision);
+                break;
 
-                case CollisionType::EXIT:
-                    c.component->OnSensorExit(collision);
-                    break;
-                }
+            case CollisionType::STAY:
+                component->OnSensorStay(collision);
+                break;
+
+            case CollisionType::EXIT:
+                component->OnSensorExit(collision);
+                break;
         }
     }
 }

@@ -5,7 +5,7 @@
 #include <DTEngine/EntityHandle.hpp>
 
 #include <memory>
-#include <deque>
+#include <vector>
 
 namespace DTEngine
 {
@@ -25,8 +25,6 @@ public:
     void Destroy(const EntityHandle<GameObject>& obj);
 
 private:
-    bool GetAvailableSlot(int& position);
-
     // Processes the destruction queue
     void ProcessDestroyQueue();
 
@@ -36,17 +34,12 @@ private:
     void WorldUpdate();
 
 private:
-    struct GameObjectSlot
-    {
-        std::unique_ptr<GameObject> gameObject;
-        uint32_t generation = 0;
-    };
-
-    std::deque<GameObjectSlot> gameObjectSlots;
+    // References to this world's objects inside the PoolSystem
+    std::vector<EntitySlotRef> objectRefs;
 
     // To be awoken
-    std::vector<GameObjectSlot*> pendingAwake;
-    std::vector<GameObjectSlot*> pendingStart;
+    std::vector<EntitySlotRef> pendingAwake;
+    std::vector<EntitySlotRef> pendingStart;
 };
 
 }

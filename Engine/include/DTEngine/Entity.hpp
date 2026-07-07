@@ -2,17 +2,19 @@
 #define DTENGINE_ENTITY_H
 
 #include <DTEngine/Utils.hpp>
+#include <DTEngine/EntityHandle.hpp>
 
 #include <cstdint>
 #include <vector>
 
 namespace DTEngine
 {
-    
+
 class Entity
 {
 template <typename T>
 friend struct EntityHandle;
+friend class PoolSystem;
 
 public:
     using ID = std::uint32_t;
@@ -29,6 +31,10 @@ public:
 protected:
     bool markedForDestruction = false;
     ID id;
+
+    // Reference to this entity's own slot in the PoolSystem; empty for
+    // entities that live outside the pool
+    EntitySlotRef selfRef;
 
     static ID nextID;
     static std::vector<ID> freeIDs;

@@ -6,6 +6,7 @@
 #include "system/TimeSystem.hpp"
 #include "system/InputSystem.hpp"
 #include "system/PhysicsSystem.hpp"
+#include "system/PoolSystem.hpp"
 
 #include <iostream>
 #include <stdexcept>
@@ -30,6 +31,7 @@ SystemRegistry::SystemRegistry()
 
 bool SystemRegistry::IsFullyWorking() const
 {
+    if (poolSystem == nullptr) return false;
     if (renderingSystem == nullptr) return false;
     if (worldSystem == nullptr) return false;
     if (pathSystem == nullptr) return false;
@@ -45,6 +47,10 @@ bool SystemRegistry::InitWorks(const std::string& assetsPath, const std::string&
     pathSystem = std::make_unique<PathSystem>(assetsPath, resourcesPath);
     if (!pathSystem->Init()) return false;
     systems[typeid(PathSystem)] = pathSystem.get();
+
+    poolSystem = std::make_unique<PoolSystem>();
+    if (!poolSystem->Init()) return false;
+    systems[typeid(PoolSystem)] = poolSystem.get();
 
     renderingSystem = std::make_unique<RenderingSystem>();
     if (!renderingSystem->Init()) return false;
@@ -77,4 +83,5 @@ void SystemRegistry::UnloadEverything()
     timeSystem.reset();
     renderingSystem.reset();
     pathSystem.reset();
+    poolSystem.reset();
 }

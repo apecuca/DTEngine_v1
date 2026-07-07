@@ -1,6 +1,8 @@
 #include <World.hpp>
 
 #include <DTEngine/GameObject.hpp>
+#include "system/SystemRegistry.hpp"
+#include "system/PoolSystem.hpp"
 
 #include <algorithm>
 
@@ -8,7 +10,14 @@ using namespace DTEngine;
 
 World::~World()
 {
-    //
+    // Objects live in the global pool; release them with their world
+    PoolSystem* pool = SystemRegistry::GetSystem<PoolSystem>();
+    if (pool == nullptr)
+        return;
+
+    for (auto& ref : objectRefs)
+        if (ref.IsAlive())
+            pool->Release(ref.ptr);
 }
 
 World::World() :
@@ -19,77 +28,51 @@ World::World() :
 
 EntityHandle<GameObject> World::Instantiate()
 {
-    GameObjectSlot newSlot;
-    newSlot.gameObject = std::make_unique<GameObject>();
-    auto objRawPtr = newSlot.gameObject.get();
-    int slotIndex;
-    bool available = GetAvailableSlot(slotIndex);
-    if (available)
-        gameObjectSlots.at(slotIndex).gameObject = std::move(newSlot.gameObject);
-    else {
-        gameObjectSlots.emplace_back(std::move(newSlot));
-        slotIndex = gameObjectSlots.size() - 1;
-    }
+    PoolSystem* pool = SystemRegistry::GetSystem<PoolSystem>();
 
-    EntityHandle<GameObject> handle;
-    for (auto& slot : gameObjectSlots)
-            if (slot.gameObject != nullptr && *slot.gameObject == *objRawPtr)
-            {
-                handle.ptr = objRawPtr;
-                handle.generation = &(slot.generation);
-                handle.index = slot.generation;
-            }
+    EntitySlotRef ref = pool->Acquire(std::make_unique<GameObject>());
+    objectRefs.emplace_back(ref);
+    pendingAwake.emplace_back(ref);
+    pendingStart.emplace_back(ref);
 
-    if (gameObjectSlots[slotIndex].gameObject != nullptr) {
-        pendingAwake.emplace_back(&gameObjectSlots[slotIndex]);
-        pendingStart.emplace_back(&gameObjectSlots[slotIndex]);
-    }
-
-    return handle;
+    return EntityHandle<GameObject>(ref);
 }
 
 void World::Destroy(const EntityHandle<GameObject>& obj)
 {
-    auto it = std::find_if(gameObjectSlots.begin(), gameObjectSlots.end(),
-        [obj](const GameObjectSlot& slot)
-        {
-            if (slot.gameObject == nullptr) return false;
-            return *slot.gameObject == *obj.ptr; 
-        });
+    GameObject* target = obj.Get();
+    if (target == nullptr)
+        return;
 
-    if (it != gameObjectSlots.end())
-        it->gameObject->MarkForDestruction();
-}
+    for (auto& ref : objectRefs) {
+        if (!ref.IsAlive()) continue;
 
-
-bool World::GetAvailableSlot(int& position)
-{
-    position = -1;
-    for (int i = 0; i < gameObjectSlots.size(); i++) {
-        GameObjectSlot& slot = gameObjectSlots.at(i);
-        if (slot.gameObject == nullptr) {
-            position = i;
-            return true;
-        }
+        if (ref.ptr == target)
+            static_cast<GameObject*>(ref.ptr)->MarkForDestruction();
     }
-
-    return false;
 }
 
 void World::ProcessDestroyQueue()
 {
-    for (auto& slot : gameObjectSlots) {
-        if (slot.gameObject == nullptr) continue;
+    PoolSystem* pool = SystemRegistry::GetSystem<PoolSystem>();
+    if (pool == nullptr)
+        return;
 
-        if (slot.gameObject->markedForDestruction) {
-            slot.gameObject.reset();
-            slot.generation++;
-        }
+    // Release marked components before their owners so the component
+    // slots are returned to the pool as well
+    for (auto& ref : objectRefs)
+        if (ref.IsAlive())
+            static_cast<GameObject*>(ref.ptr)->ProcessComponentDestructionQueue();
+
+    for (auto& ref : objectRefs) {
+        if (!ref.IsAlive()) continue;
+
+        GameObject* gameObject = static_cast<GameObject*>(ref.ptr);
+        if (gameObject->markedForDestruction)
+            pool->Release(gameObject);
     }
 
-    for (auto& slot : gameObjectSlots)
-        if (slot.gameObject != nullptr)
-            slot.gameObject->ProcessComponentDestructionQueue();
+    std::erase_if(objectRefs, [](const EntitySlotRef& ref) { return !ref.IsAlive(); });
 }
 
 void World::WorldAwake()
@@ -98,13 +81,12 @@ void World::WorldAwake()
         return;
 
     // Copy to avoid changes mid passing
-    std::vector<GameObjectSlot*> vCopy(pendingAwake.size());
-    std::copy(pendingAwake.begin(), pendingAwake.end(), vCopy.begin());
+    std::vector<EntitySlotRef> vCopy = pendingAwake;
     pendingAwake.clear();
 
-    for (auto& slot : vCopy)
-        if (slot->gameObject != nullptr)
-            slot->gameObject->InternalAwake();
+    for (auto& ref : vCopy)
+        if (ref.IsAlive())
+            static_cast<GameObject*>(ref.ptr)->InternalAwake();
 
 }
 
@@ -114,20 +96,19 @@ void World::WorldStart()
         return;
 
     // Copy to avoid changes mid passing
-    std::vector<GameObjectSlot*> vCopy(pendingStart.size());
-    std::copy(pendingStart.begin(), pendingStart.end(), vCopy.begin());
+    std::vector<EntitySlotRef> vCopy = pendingStart;
     pendingStart.clear();
 
-    for (auto& slot : vCopy)
-        if (slot->gameObject != nullptr)
-            slot->gameObject->InternalStart();
+    for (auto& ref : vCopy)
+        if (ref.IsAlive())
+            static_cast<GameObject*>(ref.ptr)->InternalStart();
 }
 
 void World::WorldFixedUpdate()
 {
-    for (auto& slot : gameObjectSlots)
-        if (slot.gameObject != nullptr)
-            slot.gameObject->InternalFixedUpdate();
+    for (auto& ref : objectRefs)
+        if (ref.IsAlive())
+            static_cast<GameObject*>(ref.ptr)->InternalFixedUpdate();
 }
 
 void World::WorldUpdate()
@@ -137,12 +118,12 @@ void World::WorldUpdate()
     WorldStart();
 
     // Update behaviour
-    for (auto& slot : gameObjectSlots)
-        if (slot.gameObject != nullptr)
-            slot.gameObject->InternalUpdate();
+    for (auto& ref : objectRefs)
+        if (ref.IsAlive())
+            static_cast<GameObject*>(ref.ptr)->InternalUpdate();
 
     // Late update behaviour
-    for (auto& slot : gameObjectSlots)
-        if (slot.gameObject != nullptr)
-            slot.gameObject->InternalLateUpdate();
+    for (auto& ref : objectRefs)
+        if (ref.IsAlive())
+            static_cast<GameObject*>(ref.ptr)->InternalLateUpdate();
 }
