@@ -45,6 +45,16 @@ public:
     std::string GetLayer() const;
 
     //
+    // World-space transform, composed up the parent hierarchy.
+    // For root objects it equals the local position/scale/rotation fields.
+    //
+
+    Vector2 GetWorldPosition() const;
+    Vector2 GetWorldScale() const;
+    Vector3 GetWorldRotation() const;
+    void SetWorldPosition(const Vector2& worldPosition);
+
+    //
     // Component logic
     //
 
@@ -118,6 +128,7 @@ private:
     void ReceiveSensorMessage(Collision& collision);
 
 public:
+    // Local to the parent; equals world space for root objects
     Vector2 position;
     Vector2 scale;
     Vector3 rotation;

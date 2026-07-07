@@ -53,6 +53,9 @@ void SuperComponent::Update()
     if (InputManager::GetKey(DTK_LCTRL)) {
         gameObject.position = Window::GetInstance()->ScreenToWorldPoint(InputManager::GetMousePosition());
         rb->linearVelocity = Vector2::zero();
+
+        if (InputManager::GetKey(DTK_R))
+            gameObject.rotation.z += 20.0f * TimeManager::GetDeltaTime();
     }
     else {
         if (InputManager::GetKey(DTK_RIGHT))

@@ -138,11 +138,11 @@ void PhysicsSystem::DetectAndResolveCollisions()
             float penetration;
             if (ox < oy) {
                 penetration = ox;
-                normal = (a->gameObject.position.x < b->gameObject.position.x)
+                normal = (a->gameObject.GetWorldPosition().x < b->gameObject.GetWorldPosition().x)
                     ? Vector2(-1.0f, 0.0f) : Vector2(1.0f, 0.0f);
             } else {
                 penetration = oy;
-                normal = (a->gameObject.position.y < b->gameObject.position.y)
+                normal = (a->gameObject.GetWorldPosition().y < b->gameObject.GetWorldPosition().y)
                     ? Vector2(0.0f, -1.0f) : Vector2(0.0f, 1.0f);
             }
 
@@ -174,8 +174,14 @@ void PhysicsSystem::ResolveCollision(POHandler& a, POHandler& b,
     float totalInvMass = invMassA + invMassB;
 
     // Push objects apart proportional to their mass ratio (positional correction)
-    if (rbA) colA->gameObject.position += normal * (penetration * invMassA / totalInvMass);
-    if (rbB) colB->gameObject.position += normal * -(penetration * invMassB / totalInvMass);
+    if (rbA) {
+        GameObject& objA = colA->gameObject;
+        objA.SetWorldPosition(objA.GetWorldPosition() + normal * (penetration * invMassA / totalInvMass));
+    }
+    if (rbB) {
+        GameObject& objB = colB->gameObject;
+        objB.SetWorldPosition(objB.GetWorldPosition() + normal * -(penetration * invMassB / totalInvMass));
+    }
 
     // Relative velocity between the two bodies
     Vector2 velA = rbA ? rbA->linearVelocity : Vector2(0.0f, 0.0f);

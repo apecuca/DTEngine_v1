@@ -67,6 +67,14 @@ Game::Game()
         spr->renderOrder = 1;
         player->AddComponent<SuperComponent>();
 
+        // child
+        auto child = WorldManager::Instantiate();
+        child->position.x = 2.0f;
+        child->position.y = 2.0f;
+        child->scale = Vector2::one() * 0.5f;
+        child->SetParent(player);
+        child->AddComponent<SpriteRenderer>()->color = Vector4(0.8f, 1.0f, 1.0f, 1.0f);
+
         // Ground
         auto ground = WorldManager::Instantiate();
         ground->SetLayer("Ground");
@@ -80,5 +88,5 @@ Game::Game()
         r->gravityScale = 0.0f;
     });
 
-    WorldManager::LoadWorld(firstIndex);
+    WorldManager::LoadWorld(secondIndex);
 }

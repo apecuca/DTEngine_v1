@@ -24,12 +24,15 @@ BoxCollider::BoxCollider(GameObject& _gameObject) :
 
 Bounds BoxCollider::GetBounds() const
 {
-    Vector2 center = Vector2(gameObject.position.x + offset.x,
-                             gameObject.position.y + offset.y);
+    Vector2 worldPosition = gameObject.GetWorldPosition();
+    Vector2 worldScale = gameObject.GetWorldScale();
+
+    Vector2 center = Vector2(worldPosition.x + offset.x,
+                             worldPosition.y + offset.y);
     Vector2 half = size * 0.5f;
     Bounds b;
-    b.min = Vector2(center.x - (half.x * gameObject.scale.x), center.y - (half.y * gameObject.scale.y));
-    b.max = Vector2(center.x + (half.x * gameObject.scale.x), center.y + (half.y * gameObject.scale.y));
+    b.min = Vector2(center.x - (half.x * worldScale.x), center.y - (half.y * worldScale.y));
+    b.max = Vector2(center.x + (half.x * worldScale.x), center.y + (half.y * worldScale.y));
     return b;
 }
 

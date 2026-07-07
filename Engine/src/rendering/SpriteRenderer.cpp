@@ -102,9 +102,12 @@ void SpriteRenderer::RenderCall(Shader* overrideShader)
     Vector2 winSize = window->GetSize();
     float aspect = winSize.x / winSize.y;
     float fov = window->fov;
-    glm::vec3 position(gameObject.position.x, gameObject.position.y, 0.0f);
-    glm::vec3 scale(gameObject.scale.x, gameObject.scale.y, 1.0f);
-    glm::vec3 rotation(gameObject.rotation.x, gameObject.rotation.y, gameObject.rotation.z);
+    Vector2 worldPosition = gameObject.GetWorldPosition();
+    Vector2 worldScale = gameObject.GetWorldScale();
+    Vector3 worldRotation = gameObject.GetWorldRotation();
+    glm::vec3 position(worldPosition.x, worldPosition.y, 0.0f);
+    glm::vec3 scale(worldScale.x, worldScale.y, 1.0f);
+    glm::vec3 rotation(worldRotation.x, worldRotation.y, worldRotation.z);
     Vector2 spriteInternalSize = sprt.GetSize();
     glm::mat4 projMat(1.0f), viewMat(1.0f), modelMat(1.0f);
 

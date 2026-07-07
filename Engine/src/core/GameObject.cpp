@@ -8,10 +8,41 @@
 #include "system/PoolSystem.hpp"
 
 #include <algorithm>
+#include <cmath>
 #include <iostream>
 #include <string>
 
 using namespace DTEngine;
+
+namespace
+{
+
+// Division that degenerates to 0 instead of exploding on a (near-)zero
+// parent scale
+float SafeDiv(float numerator, float denominator)
+{
+    if (std::abs(denominator) < 1e-6f)
+        return 0.0f;
+
+    return numerator / denominator;
+}
+
+Vector2 SafeDiv(const Vector2& numerator, const Vector2& denominator)
+{
+    return Vector2(SafeDiv(numerator.x, denominator.x),
+                   SafeDiv(numerator.y, denominator.y));
+}
+
+// Rotates a vector counter-clockwise around the origin
+Vector2 RotateVector(const Vector2& v, float degrees)
+{
+    float radians = degrees * (3.14159265358979f / 180.0f);
+    float c = std::cos(radians);
+    float s = std::sin(radians);
+    return Vector2(v.x * c - v.y * s, v.x * s + v.y * c);
+}
+
+}
 
 GameObject::~GameObject()
 {
@@ -119,17 +150,33 @@ void GameObject::SetParent(const EntityHandle<GameObject>& newParent)
     if (parent == newParent)
         return;
 
+    // Preserve the world transform across the reparent: the local values
+    // are recomputed against the new parent so the object doesn't move
+    Vector2 worldPosition = GetWorldPosition();
+    Vector2 worldScale = GetWorldScale();
+    Vector3 worldRotation = GetWorldRotation();
+
     GameObject* current = parent.Get();
     if (current != nullptr)
         current->RemoveChild(GetHandle());
 
     if (target == nullptr) {
         parent = EntityHandle<GameObject>{};
+        position = worldPosition;
+        scale = worldScale;
+        rotation = worldRotation;
         return;
     }
 
     parent = newParent;
     target->AddChild(GetHandle());
+
+    Vector3 parentRotation = target->GetWorldRotation();
+    rotation = Vector3(worldRotation.x - parentRotation.x,
+                       worldRotation.y - parentRotation.y,
+                       worldRotation.z - parentRotation.z);
+    scale = SafeDiv(worldScale, target->GetWorldScale());
+    SetWorldPosition(worldPosition);
 }
 
 EntityHandle<GameObject> GameObject::GetParent() const
@@ -212,6 +259,54 @@ void GameObject::SetLayer(const std::string& layerName)
 std::string GameObject::GetLayer() const
 {
     return layer;
+}
+
+Vector2 GameObject::GetWorldScale() const
+{
+    GameObject* parentObject = parent.Get();
+    if (parentObject == nullptr)
+        return scale;
+
+    return parentObject->GetWorldScale() * scale;
+}
+
+Vector3 GameObject::GetWorldRotation() const
+{
+    GameObject* parentObject = parent.Get();
+    if (parentObject == nullptr)
+        return rotation;
+
+    Vector3 parentRotation = parentObject->GetWorldRotation();
+    return Vector3(parentRotation.x + rotation.x,
+                   parentRotation.y + rotation.y,
+                   parentRotation.z + rotation.z);
+}
+
+Vector2 GameObject::GetWorldPosition() const
+{
+    GameObject* parentObject = parent.Get();
+    if (parentObject == nullptr)
+        return position;
+
+    // The local offset scales with the parent and orbits its pivot
+    Vector2 offset = parentObject->GetWorldScale() * position;
+    offset = RotateVector(offset, parentObject->GetWorldRotation().z);
+
+    return parentObject->GetWorldPosition() + offset;
+}
+
+void GameObject::SetWorldPosition(const Vector2& worldPosition)
+{
+    GameObject* parentObject = parent.Get();
+    if (parentObject == nullptr) {
+        position = worldPosition;
+        return;
+    }
+
+    Vector2 parentPosition = parentObject->GetWorldPosition();
+    Vector2 delta(worldPosition.x - parentPosition.x, worldPosition.y - parentPosition.y);
+    delta = RotateVector(delta, -parentObject->GetWorldRotation().z);
+    position = SafeDiv(delta, parentObject->GetWorldScale());
 }
 
 void GameObject::InternalAwake()
