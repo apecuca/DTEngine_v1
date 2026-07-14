@@ -33,6 +33,7 @@ set(ENGINE_SOURCES
     ${CMAKE_CURRENT_SOURCE_DIR}/src/core/World.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/core/WorldManager.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/core/InputManager.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/core/Transform.cpp
 
     ${CMAKE_CURRENT_SOURCE_DIR}/src/external/stb_image.cpp
 

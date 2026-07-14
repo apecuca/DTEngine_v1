@@ -29,6 +29,8 @@ public:
     EntityHandle() = default;
     explicit EntityHandle(EntitySlotRef ref) : ref(ref) {}
 
+    EntityHandle(std::nullptr_t) : EntityHandle() {}
+
     // A handle is valid while its slot keeps the same generation and the
     // entity is not queued for destruction. The cast keeps the expression
     // dependent on T so Entity may still be incomplete here

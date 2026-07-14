@@ -39,10 +39,10 @@ void Rigidbody::UpdatePhysics()
     // Linear
     linearVelocity += (sys_physics->GetGravity() * gravityScale + acceleration) * dt;
     linearVelocity = linearVelocity * std::max(0.0f, 1.0f - linearDrag * dt);
-    gameObject.SetWorldPosition(gameObject.GetWorldPosition() + linearVelocity * dt);
+    gameObject.transform->SetPosition(gameObject.transform->GetPosition() + linearVelocity * dt);
 
     // Angular (for a future update on collision)
-    //gameObject.rotation.z += angularVelocity * dt;
+    //gameObject.transform->localRotation += angularVelocity * dt;
     //angularVelocity *= std::max(0.0f, 1.0f - angularDrag * dt);
 
     acceleration = Vector2(0.0f, 0.0f);

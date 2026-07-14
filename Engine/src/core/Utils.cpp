@@ -35,6 +35,18 @@ float Vector2::Distance(const Vector2& a, const Vector2& b)
     return d;
 }
 
+void Vector2::Rotate(float degrees)
+{
+    float radians = degrees * (PI / 180.0f);
+
+    float c = std::cos(radians);
+    float s = std::sin(radians);
+
+    float originalX = x;
+    x = originalX * c - y * s;
+    y = originalX * s + y * c;
+}
+
 namespace DTEngine
 {
 

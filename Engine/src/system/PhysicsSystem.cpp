@@ -138,11 +138,11 @@ void PhysicsSystem::DetectAndResolveCollisions()
             float penetration;
             if (ox < oy) {
                 penetration = ox;
-                normal = (a->gameObject.GetWorldPosition().x < b->gameObject.GetWorldPosition().x)
+                normal = (a->gameObject.transform->GetPosition().x < b->gameObject.transform->GetPosition().x)
                     ? Vector2(-1.0f, 0.0f) : Vector2(1.0f, 0.0f);
             } else {
                 penetration = oy;
-                normal = (a->gameObject.GetWorldPosition().y < b->gameObject.GetWorldPosition().y)
+                normal = (a->gameObject.transform->GetPosition().y < b->gameObject.transform->GetPosition().y)
                     ? Vector2(0.0f, -1.0f) : Vector2(0.0f, 1.0f);
             }
 
@@ -176,11 +176,11 @@ void PhysicsSystem::ResolveCollision(POHandler& a, POHandler& b,
     // Push objects apart proportional to their mass ratio (positional correction)
     if (rbA) {
         GameObject& objA = colA->gameObject;
-        objA.SetWorldPosition(objA.GetWorldPosition() + normal * (penetration * invMassA / totalInvMass));
+        objA.transform->SetPosition(objA.transform->GetPosition() + normal * (penetration * invMassA / totalInvMass));
     }
     if (rbB) {
         GameObject& objB = colB->gameObject;
-        objB.SetWorldPosition(objB.GetWorldPosition() + normal * -(penetration * invMassB / totalInvMass));
+        objB.transform->SetPosition(objB.transform->GetPosition() + normal * -(penetration * invMassB / totalInvMass));
     }
 
     // Relative velocity between the two bodies

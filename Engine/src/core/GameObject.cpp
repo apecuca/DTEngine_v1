@@ -8,41 +8,10 @@
 #include "system/PoolSystem.hpp"
 
 #include <algorithm>
-#include <cmath>
 #include <iostream>
 #include <string>
 
 using namespace DTEngine;
-
-namespace
-{
-
-// Division that degenerates to 0 instead of exploding on a (near-)zero
-// parent scale
-float SafeDiv(float numerator, float denominator)
-{
-    if (std::abs(denominator) < 1e-6f)
-        return 0.0f;
-
-    return numerator / denominator;
-}
-
-Vector2 SafeDiv(const Vector2& numerator, const Vector2& denominator)
-{
-    return Vector2(SafeDiv(numerator.x, denominator.x),
-                   SafeDiv(numerator.y, denominator.y));
-}
-
-// Rotates a vector counter-clockwise around the origin
-Vector2 RotateVector(const Vector2& v, float degrees)
-{
-    float radians = degrees * (3.14159265358979f / 180.0f);
-    float c = std::cos(radians);
-    float s = std::sin(radians);
-    return Vector2(v.x * c - v.y * s, v.x * s + v.y * c);
-}
-
-}
 
 GameObject::~GameObject()
 {
@@ -52,16 +21,23 @@ GameObject::~GameObject()
         for (auto& ref : componentRefs)
             if (ref.IsAlive())
                 pool->Release(ref.ptr);
+
+        if (transformRef.IsAlive())
+            pool->Release(transformRef.ptr);
     }
 }
 
 GameObject::GameObject() :
     Entity(),
-    position(0.0f, 0.0f),
-    scale(1.0f, 1.0f),
     clickable(true)
 {
     SetLayer("Default");
+
+    // The transform lives outside the component list: it doesn't take part
+    // in GetComponent/lifecycle calls and is released with the object itself
+    PoolSystem* pool = SystemRegistry::GetSystem<PoolSystem>();
+    transformRef = pool->Acquire(std::make_unique<Transform>(*this));
+    transform = EntityHandle<Transform>(transformRef);
 }
 
 void GameObject::MarkForDestruction()
@@ -71,16 +47,26 @@ void GameObject::MarkForDestruction()
 
     markedForDestruction = true;
 
+    // Destruction cascades down the hierarchy. This must happen before the
+    // components are marked: marking them invalidates the transform handle
+    Transform* ownTransform = transform.Get();
+    if (ownTransform != nullptr) {
+        // Copy: marking a child invalidates its handle inside the original vector
+        auto childrenCopy = ownTransform->children;
+        for (auto& child : childrenCopy) {
+            Transform* childTransform = child.Get();
+            if (childTransform != nullptr)
+                childTransform->gameObject.MarkForDestruction();
+        }
+    }
+
+    // Marked so handles to the transform invalidate along with the object
+    if (transformRef.IsAlive())
+        static_cast<Component*>(transformRef.ptr)->markedForDestruction = true;
+
     for (auto& ref : componentRefs) {
         if (!ref.IsAlive()) continue;
         static_cast<Component*>(ref.ptr)->markedForDestruction = true;
-    }
-
-    // Destruction cascades down the hierarchy
-    for (auto& child : children) {
-        GameObject* childObject = child.Get();
-        if (childObject != nullptr)
-            childObject->MarkForDestruction();
     }
 }
 
@@ -134,116 +120,6 @@ EntityHandle<GameObject> GameObject::GetHandle() const
     return EntityHandle<GameObject>(selfRef);
 }
 
-void GameObject::SetParent(const EntityHandle<GameObject>& newParent)
-{
-    GameObject* target = newParent.Get();
-
-    // Reject self-parenting and hierarchy cycles before mutating anything;
-    // with cascading destruction a cycle would recurse forever
-    for (GameObject* ancestor = target; ancestor != nullptr; ancestor = ancestor->parent.Get()) {
-        if (ancestor == this) {
-            std::cerr << "[GameObject] SetParent: would create a hierarchy cycle\n";
-            return;
-        }
-    }
-
-    if (parent == newParent)
-        return;
-
-    // Preserve the world transform across the reparent: the local values
-    // are recomputed against the new parent so the object doesn't move
-    Vector2 worldPosition = GetWorldPosition();
-    Vector2 worldScale = GetWorldScale();
-    Vector3 worldRotation = GetWorldRotation();
-
-    GameObject* current = parent.Get();
-    if (current != nullptr)
-        current->RemoveChild(GetHandle());
-
-    if (target == nullptr) {
-        parent = EntityHandle<GameObject>{};
-        position = worldPosition;
-        scale = worldScale;
-        rotation = worldRotation;
-        return;
-    }
-
-    parent = newParent;
-    target->AddChild(GetHandle());
-
-    Vector3 parentRotation = target->GetWorldRotation();
-    rotation = Vector3(worldRotation.x - parentRotation.x,
-                       worldRotation.y - parentRotation.y,
-                       worldRotation.z - parentRotation.z);
-    scale = SafeDiv(worldScale, target->GetWorldScale());
-    SetWorldPosition(worldPosition);
-}
-
-EntityHandle<GameObject> GameObject::GetParent() const
-{
-    return parent;
-}
-
-void GameObject::AddChild(const EntityHandle<GameObject>& obj)
-{
-    int position;
-    if (HasChild(obj, position))
-        return;
-
-    children.emplace_back(obj);
-}
-
-void GameObject::RemoveChild(const EntityHandle<GameObject>& obj)
-{
-    int position;
-    if (!HasChild(obj, position))
-        return;
-
-    children.erase(children.begin() + position);
-}
-
-void GameObject::PruneChildren()
-{
-    std::erase_if(children, [](const EntityHandle<GameObject>& child) {
-        return !child.IsValid();
-    });
-}
-
-int GameObject::ChildCount()
-{
-    PruneChildren();
-
-    return static_cast<int>(children.size());
-}
-
-EntityHandle<GameObject> GameObject::ChildAt(int position)
-{
-    PruneChildren();
-
-    if (position < 0 || position >= (int)children.size())
-        throw std::runtime_error("Child position " + std::to_string(position) + " out of bounds");
-
-    return children.at(position);
-}
-
-bool GameObject::HasChild(const EntityHandle<GameObject>& obj, int& outPosition)
-{
-    PruneChildren();
-
-    outPosition = -1;
-    if (obj == nullptr)
-        return false;
-
-    for (int i = 0; i < children.size(); i++) {
-        if (children[i] == obj) {
-            outPosition = i;
-            return true;
-        }
-    }
-
-    return false;
-}
-
 void GameObject::SetLayer(const std::string& layerName)
 {
     // PhysicsSystem may not exist yet during engine bootstrap; skip validation then
@@ -259,54 +135,6 @@ void GameObject::SetLayer(const std::string& layerName)
 std::string GameObject::GetLayer() const
 {
     return layer;
-}
-
-Vector2 GameObject::GetWorldScale() const
-{
-    GameObject* parentObject = parent.Get();
-    if (parentObject == nullptr)
-        return scale;
-
-    return parentObject->GetWorldScale() * scale;
-}
-
-Vector3 GameObject::GetWorldRotation() const
-{
-    GameObject* parentObject = parent.Get();
-    if (parentObject == nullptr)
-        return rotation;
-
-    Vector3 parentRotation = parentObject->GetWorldRotation();
-    return Vector3(parentRotation.x + rotation.x,
-                   parentRotation.y + rotation.y,
-                   parentRotation.z + rotation.z);
-}
-
-Vector2 GameObject::GetWorldPosition() const
-{
-    GameObject* parentObject = parent.Get();
-    if (parentObject == nullptr)
-        return position;
-
-    // The local offset scales with the parent and orbits its pivot
-    Vector2 offset = parentObject->GetWorldScale() * position;
-    offset = RotateVector(offset, parentObject->GetWorldRotation().z);
-
-    return parentObject->GetWorldPosition() + offset;
-}
-
-void GameObject::SetWorldPosition(const Vector2& worldPosition)
-{
-    GameObject* parentObject = parent.Get();
-    if (parentObject == nullptr) {
-        position = worldPosition;
-        return;
-    }
-
-    Vector2 parentPosition = parentObject->GetWorldPosition();
-    Vector2 delta(worldPosition.x - parentPosition.x, worldPosition.y - parentPosition.y);
-    delta = RotateVector(delta, -parentObject->GetWorldRotation().z);
-    position = SafeDiv(delta, parentObject->GetWorldScale());
 }
 
 void GameObject::InternalAwake()

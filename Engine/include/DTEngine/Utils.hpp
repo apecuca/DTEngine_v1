@@ -147,6 +147,8 @@
 #define DTK_ALT         0x12
 #define DTK_SLEEP       0x5F
 
+float constexpr PI = 3.14159265358979f;
+
 namespace DTEngine
 {
 
@@ -195,6 +197,10 @@ public:
 
        return *this;
     }
+
+public:
+    // Rotates a vector counter-clockwise around the origin
+    void Rotate(float degrees);
 
 public:
     // Calculates the distance between two vectors

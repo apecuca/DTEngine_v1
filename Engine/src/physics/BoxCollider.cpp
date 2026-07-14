@@ -24,8 +24,8 @@ BoxCollider::BoxCollider(GameObject& _gameObject) :
 
 Bounds BoxCollider::GetBounds() const
 {
-    Vector2 worldPosition = gameObject.GetWorldPosition();
-    Vector2 worldScale = gameObject.GetWorldScale();
+    Vector2 worldPosition = gameObject.transform->GetPosition();
+    Vector2 worldScale = gameObject.transform->GetScale();
 
     Vector2 center = Vector2(worldPosition.x + offset.x,
                              worldPosition.y + offset.y);

@@ -34,7 +34,9 @@ void SuperComponent::Awake()
 
 void SuperComponent::Start()
 {
-    //
+    if (gameObject.transform->ChildCount() > 0) {
+        child = gameObject.transform->ChildAt(0);
+    }
 }
 
 void SuperComponent::FixedUpdate()
@@ -45,17 +47,17 @@ void SuperComponent::FixedUpdate()
 void SuperComponent::Update()
 {
     std::vector<RaycastHit> hit;
-    Vector2 feetPosition = gameObject.position;
+    Vector2 feetPosition = gameObject.transform->GetPosition();
     feetPosition.y -= 0.55f;
     grounded = PhysicsManager::OverlapBox(feetPosition, Vector2(1.0f, 0.1f),
                                           PhysicsManager::GetLayerMask({"Ground"}), hit);
 
     if (InputManager::GetKey(DTK_LCTRL)) {
-        gameObject.position = Window::GetInstance()->ScreenToWorldPoint(InputManager::GetMousePosition());
+        gameObject.transform->SetPosition(Window::GetInstance()->ScreenToWorldPoint(InputManager::GetMousePosition()));
         rb->linearVelocity = Vector2::zero();
 
         if (InputManager::GetKey(DTK_R))
-            gameObject.rotation.z += 20.0f * TimeManager::GetDeltaTime();
+            gameObject.transform->localRotation += 20.0f * TimeManager::GetDeltaTime();
     }
     else {
         if (InputManager::GetKey(DTK_RIGHT))
@@ -65,6 +67,13 @@ void SuperComponent::Update()
 
         if (InputManager::GetKey(DTK_SPACE) && grounded)
             rb->linearVelocity.y = jumpForce;
+    }
+
+    if (InputManager::GetKeyDown(DTK_C) && child) {
+        if (gameObject.transform->ChildCount() == 0)
+            child->SetParent(gameObject.transform);
+        else
+            child->SetParent(nullptr);
     }
 
     if (InputManager::GetKeyDown(DTK_ALPHA1))

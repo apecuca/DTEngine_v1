@@ -34,6 +34,7 @@ public:
 
 private:
     EntityHandle<Rigidbody> rb;
+    EntityHandle<Transform> child;
     
     float moveSpeed = 4.0f;
     float jumpForce = 7.5f;

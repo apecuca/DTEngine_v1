@@ -3,7 +3,7 @@
 
 #include <DTEngine/Entity.hpp>
 
-#include <DTEngine/Component.hpp>
+#include <DTEngine/Transform.hpp>
 #include <DTEngine/EntityHandle.hpp>
 #include <DTEngine/Utils.hpp>
 
@@ -33,26 +33,8 @@ public:
     // that live outside the pool (e.g. the World itself)
     EntityHandle<GameObject> GetHandle() const;
 
-    // An invalid handle makes the object a root (no parent)
-    void SetParent(const EntityHandle<GameObject>& newParent);
-    EntityHandle<GameObject> GetParent() const;
-
-    int ChildCount();
-    EntityHandle<GameObject> ChildAt(int position);
-    bool HasChild(const EntityHandle<GameObject>& obj, int& outPosition);
-
     void SetLayer(const std::string& layerName);
     std::string GetLayer() const;
-
-    //
-    // World-space transform, composed up the parent hierarchy.
-    // For root objects it equals the local position/scale/rotation fields.
-    //
-
-    Vector2 GetWorldPosition() const;
-    Vector2 GetWorldScale() const;
-    Vector3 GetWorldRotation() const;
-    void SetWorldPosition(const Vector2& worldPosition);
 
     //
     // Component logic
@@ -112,12 +94,6 @@ private:
     EntitySlotRef AddComponentImpl(std::unique_ptr<Component> component);
     EntitySlotRef FindComponentImpl(const std::type_info& type) const;
 
-    void AddChild(const EntityHandle<GameObject>& obj);
-    void RemoveChild(const EntityHandle<GameObject>& obj);
-
-    // Drops invalidated child handles
-    void PruneChildren();
-
     void InternalAwake();
     void InternalStart();
     void InternalFixedUpdate();
@@ -128,17 +104,17 @@ private:
     void ReceiveSensorMessage(Collision& collision);
 
 public:
-    // Local to the parent; equals world space for root objects
-    Vector2 position;
-    Vector2 scale;
-    Vector3 rotation;
+    EntityHandle<Transform> transform;
+
     bool clickable;
     std::string tag;
 
 private:
-    EntityHandle<GameObject> parent;
-    std::vector<EntityHandle<GameObject>> children;
     std::string layer;
+
+    // The transform's own slot in the PoolSystem, kept outside the
+    // component list so it can be released even after being marked
+    EntitySlotRef transformRef;
 
     // References to this object's components inside the PoolSystem
     std::vector<EntitySlotRef> componentRefs;
