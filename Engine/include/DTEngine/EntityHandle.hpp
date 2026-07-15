@@ -25,6 +25,8 @@ struct EntitySlotRef
 template<typename T>
 struct EntityHandle
 {
+friend class PoolSystem;
+
 public:
     EntityHandle() = default;
     explicit EntityHandle(EntitySlotRef ref) : ref(ref) {}

@@ -112,10 +112,6 @@ public:
 private:
     std::string layer;
 
-    // The transform's own slot in the PoolSystem, kept outside the
-    // component list so it can be released even after being marked
-    EntitySlotRef transformRef;
-
     // References to this object's components inside the PoolSystem
     std::vector<EntitySlotRef> componentRefs;
 };

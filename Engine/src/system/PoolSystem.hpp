@@ -41,7 +41,10 @@ public:
     template <typename T>
     void DeleteEntity(EntityHandle<T>& handle)
     {
-        Release(handle.Get());
+        // Bypasses the handle's marked-for-destruction check: a marked
+        // entity still owns its slot and must be releasable
+        if (handle.ref.IsAlive())
+            Release(handle.ref.ptr);
     }
 
 protected:

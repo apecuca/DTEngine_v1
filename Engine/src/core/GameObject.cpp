@@ -22,8 +22,7 @@ GameObject::~GameObject()
             if (ref.IsAlive())
                 pool->Release(ref.ptr);
 
-        if (transformRef.IsAlive())
-            pool->Release(transformRef.ptr);
+        pool->DeleteEntity(transform);
     }
 }
 
@@ -36,8 +35,7 @@ GameObject::GameObject() :
     // The transform lives outside the component list: it doesn't take part
     // in GetComponent/lifecycle calls and is released with the object itself
     PoolSystem* pool = SystemRegistry::GetSystem<PoolSystem>();
-    transformRef = pool->Acquire(std::make_unique<Transform>(*this));
-    transform = EntityHandle<Transform>(transformRef);
+    transform = pool->PoolEntity<Transform>(*this);
 }
 
 void GameObject::MarkForDestruction()
@@ -48,7 +46,7 @@ void GameObject::MarkForDestruction()
     markedForDestruction = true;
 
     // Destruction cascades down the hierarchy. This must happen before the
-    // components are marked: marking them invalidates the transform handle
+    // transform is marked: marking it invalidates the transform handle
     Transform* ownTransform = transform.Get();
     if (ownTransform != nullptr) {
         // Copy: marking a child invalidates its handle inside the original vector
@@ -58,11 +56,10 @@ void GameObject::MarkForDestruction()
             if (childTransform != nullptr)
                 childTransform->gameObject.MarkForDestruction();
         }
-    }
 
-    // Marked so handles to the transform invalidate along with the object
-    if (transformRef.IsAlive())
-        static_cast<Component*>(transformRef.ptr)->markedForDestruction = true;
+        // Marked so handles to the transform invalidate along with the object
+        ownTransform->markedForDestruction = true;
+    }
 
     for (auto& ref : componentRefs) {
         if (!ref.IsAlive()) continue;
