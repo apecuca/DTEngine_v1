@@ -130,12 +130,6 @@ bool RenderingSystem::ConfigPostProcessing()
     // Attach binded texture to framebuffer
     glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, worldFBT, 0);
 
-    // Generate and setups RBO (Render buffer object)
-    glGenRenderbuffers(1, &worldRBO);
-    glBindRenderbuffer(GL_RENDERBUFFER, worldRBO);
-    glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, screenSize.x, screenSize.y);
-    glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, worldRBO);
-
     auto fboStatus = glCheckFramebufferStatus(GL_FRAMEBUFFER);
     if (fboStatus != GL_FRAMEBUFFER_COMPLETE)
         return false;
@@ -189,7 +183,6 @@ bool RenderingSystem::ConfigPostProcessing()
     // Unbind all
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
     glBindTexture(GL_TEXTURE_2D, 0);
-    glBindRenderbuffer(GL_RENDERBUFFER, 0);
     glBindVertexArray(0);
     glBindBuffer(GL_ARRAY_BUFFER, 0);
 

@@ -69,7 +69,7 @@ private:
     int animationFramerate = 24;
 
     // Frame Buffer Object, Frame Buffer Texture, Render Buffer Object
-    unsigned int worldFBO, worldFBT, worldRBO;
+    unsigned int worldFBO, worldFBT;
     unsigned int solidFBO, solidFBT;
     std::unique_ptr<Shader> solidPassShader;
     unsigned int screenquadVAO, screenquadVBO;

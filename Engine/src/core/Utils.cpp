@@ -544,6 +544,62 @@ Matrix3& Matrix3::operator*= (float scalar)
     return *this;
 }
 
+Matrix3 Matrix3::Translate(const Matrix3& mat, const Vector2& translation)
+{
+    Matrix3 result(mat);
+
+    for (int row = 0; row < 3; row++)
+    {
+        result.m[2][row] =
+            mat.m[0][row] * translation.x +
+            mat.m[1][row] * translation.y +
+            mat.m[2][row];
+    }
+
+    return result;
+}
+
+Matrix3 Matrix3::Rotate(const Matrix3& mat, float angleRadians)
+{
+    float c = std::cos(angleRadians);
+    float s = std::sin(angleRadians);
+
+    Matrix3 result(mat);
+
+    for (int row = 0; row < 3; row++)
+    {
+        result.m[0][row] = mat.m[0][row] * c + mat.m[1][row] * s;
+        result.m[1][row] = mat.m[0][row] * -s + mat.m[1][row] * c;
+    }
+
+    return result;
+}
+
+Matrix3 Matrix3::Scale(const Matrix3& mat, const Vector2& scale)
+{
+    Matrix3 result(mat);
+
+    for (int row = 0; row < 3; row++)
+    {
+        result.m[0][row] = mat.m[0][row] * scale.x;
+        result.m[1][row] = mat.m[1][row] * scale.y;
+    }
+
+    return result;
+}
+
+Matrix3 Matrix3::Ortho(float left, float right, float bottom, float top)
+{
+    Matrix3 result(1.0f);
+
+    result.m[0][0] = 2.0f / (right - left);
+    result.m[1][1] = 2.0f / (top - bottom);
+    result.m[2][0] = -(right + left) / (right - left);
+    result.m[2][1] = -(top + bottom) / (top - bottom);
+
+    return result;
+}
+
 namespace DTEngine
 {
 

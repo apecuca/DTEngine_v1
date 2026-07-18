@@ -349,6 +349,13 @@ public:
 public:
     inline static Matrix3 Identity() { return Matrix3(1.0f); }
 
+    // Post-multiplied 2D affine transforms (homogeneous coordinates)
+    static Matrix3 Translate(const Matrix3& mat, const Vector2& translation);
+    // Counter-clockwise rotation
+    static Matrix3 Rotate(const Matrix3& mat, float angleRadians);
+    static Matrix3 Scale(const Matrix3& mat, const Vector2& scale);
+    static Matrix3 Ortho(float left, float right, float bottom, float top);
+
 private:
     float m[3][3];
 };

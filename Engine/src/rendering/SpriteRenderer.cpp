@@ -33,11 +33,11 @@ SpriteRenderer::SpriteRenderer(GameObject& _gameObject) :
 
     // Basic vertices
     float vertices[] = {
-        // positions            // texture coords
-        0.5f,  0.5f, 0.0f,      1.0f, 1.0f, // top right
-        0.5f, -0.5f, 0.0f,      1.0f, 0.0f, // bottom right
-       -0.5f, -0.5f, 0.0f,      0.0f, 0.0f, // bottom left
-       -0.5f,  0.5f, 0.0f,      0.0f, 1.0f  // top left 
+        // positions        // texture coords
+        0.5f,  0.5f,        1.0f, 1.0f, // top right
+        0.5f, -0.5f,        1.0f, 0.0f, // bottom right
+       -0.5f, -0.5f,        0.0f, 0.0f, // bottom left
+       -0.5f,  0.5f,        0.0f, 1.0f  // top left
     };
     
     unsigned int indices[] = {  // note that we start from 0!
@@ -59,11 +59,11 @@ SpriteRenderer::SpriteRenderer(GameObject& _gameObject) :
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
 
     // Position attribute
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)0);
+    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)0);
     glEnableVertexAttribArray(0);
 
     // texture coord attribute
-    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(3 * sizeof(float)));
+    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)(2 * sizeof(float)));
     glEnableVertexAttribArray(1);
 
     // note that this is allowed, the call to glVertexAttribPointer registered VBO as the vertex attribute's bound vertex buffer object so afterwards we can safely unbind
@@ -102,37 +102,25 @@ void SpriteRenderer::RenderCall(Shader* overrideShader)
     Vector2 worldPosition = gameObject.transform->GetPosition();
     Vector2 worldScale = gameObject.transform->GetScale();
     float worldRotation = gameObject.transform->GetRotation();
-    Vector3 position(worldPosition, 0.0f);
-    Vector3 scale(worldScale, 1.0f);
-    Vector3 rotation(0.0f, 0.0f, worldRotation);
     Vector2 spriteInternalSize = sprt.GetSize();
-    Matrix4 projMat(1.0f), viewMat(1.0f), modelMat(1.0f);
+    Matrix3 projMat(1.0f), modelMat(1.0f);
 
     // Transform the matrices
-    projMat = Matrix4::Ortho(-aspect * fov, aspect * fov, -1.0f * fov, 1.0f * fov, 0.0f, 100.0f);
-    viewMat = Matrix4::Translate(viewMat, Vector3(0.0f, 0.0f, -10.0f));
-    modelMat = Matrix4::Translate(modelMat, position);
+    projMat = Matrix3::Ortho(-aspect * fov, aspect * fov, -1.0f * fov, 1.0f * fov);
+    modelMat = Matrix3::Translate(modelMat, worldPosition);
     // Rotation
-    if (rotation.Length() != 0)
-    {
-        modelMat = Matrix4::Rotate(modelMat,
-            Radians(rotation.Length()),
-            rotation.Normalized());
-    }
+    if (worldRotation != 0.0f)
+        modelMat = Matrix3::Rotate(modelMat, Radians(worldRotation));
     // Sprite size
-    Vector3 spriteSize(
-        spriteInternalSize.x / sprt.pixelsPerUnit,
-        spriteInternalSize.y / sprt.pixelsPerUnit,
-        1.0f);
-    modelMat = Matrix4::Scale(modelMat, spriteSize);
+    Vector2 spriteSize = spriteInternalSize / sprt.pixelsPerUnit;
+    modelMat = Matrix3::Scale(modelMat, spriteSize);
     // GameObject scale
-    modelMat = Matrix4::Scale(modelMat, scale);
+    modelMat = Matrix3::Scale(modelMat, worldScale);
 
     // Update shader
     shad.Bind();
-    shad.SetMat4("projection", projMat);
-    shad.SetMat4("view", viewMat);
-    shad.SetMat4("model", modelMat);
+    shad.SetMat3("projection", projMat);
+    shad.SetMat3("model", modelMat);
     shad.SetVec4("color", color);
 
     // Draw texture
