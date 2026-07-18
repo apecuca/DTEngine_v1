@@ -161,48 +161,38 @@ typedef uint32_t LayerMask;
 // Mask matching every layer
 constexpr LayerMask LAYER_MASK_ALL = ~0u;
 
+// Converts degrees to radians
+constexpr float Radians(float degrees) { return degrees * (PI / 180.0f); }
+
 ///
-/// MISC
+/// VECTORS
 /// 
 
 struct Vector2
 {
 public:
-    ~Vector2() = default;
     Vector2();
-    Vector2(const Vector2& _other);
     Vector2(float _x, float _y);
 
-    friend Vector2 operator+ (const Vector2& lhs, const Vector2& rhs);
-    friend Vector2 operator* (const Vector2& lhs, const Vector2& rhs);
+    Vector2 operator- () const;
 
-    Vector2 operator* (float scalar) const {
-       return Vector2(this->x * scalar, this->y * scalar);
-    }
-
-    Vector2 operator- () const {
-       return Vector2(-this->x, -this->y);
-    }
-
-    Vector2& operator+= (const Vector2& rhs) {
-       this->x += rhs.x;
-       this->y += rhs.y;
-
-       return *this;
-    }
-
-    Vector2& operator*= (const Vector2& rhs) {
-       this->x *= rhs.x;
-       this->y *= rhs.y;
-
-       return *this;
-    }
+    Vector2& operator+= (const Vector2& rhs);
+    Vector2& operator-= (const Vector2& rhs);
+    Vector2& operator*= (const Vector2& rhs);
+    Vector2& operator/= (const Vector2& rhs);
+    Vector2& operator*= (float scalar);
+    Vector2& operator/= (float scalar);
 
 public:
-    // Rotates a vector counter-clockwise around the origin
+    // Returns the magnitude of the vector
+    float Length() const;
+    // Returns this vector with magnitude 1 (undefined for zero-length vectors)
+    Vector2 Normalized() const;
+    // Rotates the vector counter-clockwise around the origin
     void Rotate(float degrees);
 
 public:
+    static float Dot(const Vector2& a, const Vector2& b);
     // Calculates the distance between two vectors
     static float Distance(const Vector2& a, const Vector2& b);
 
@@ -215,36 +205,199 @@ public:
     float x, y;
 };
 
-struct Vector3 : public Vector2
+// Componentwise arithmetic
+Vector2 operator+ (const Vector2& lhs, const Vector2& rhs);
+Vector2 operator- (const Vector2& lhs, const Vector2& rhs);
+Vector2 operator* (const Vector2& lhs, const Vector2& rhs);
+Vector2 operator/ (const Vector2& lhs, const Vector2& rhs);
+// Scalar arithmetic
+Vector2 operator* (const Vector2& lhs, float scalar);
+Vector2 operator* (float scalar, const Vector2& rhs);
+Vector2 operator/ (const Vector2& lhs, float scalar);
+// Exact float comparison
+bool operator== (const Vector2& lhs, const Vector2& rhs);
+bool operator!= (const Vector2& lhs, const Vector2& rhs);
+
+struct Vector3
 {
 public:
-    ~Vector3() = default;
     Vector3();
-    Vector3(const Vector2& _other);
-    Vector3(const Vector3& _other);
     Vector3(float _x, float _y, float _z);
+    Vector3(const Vector2& _xy, float _z);
+
+    Vector3 operator- () const;
+
+    Vector3& operator+= (const Vector3& rhs);
+    Vector3& operator-= (const Vector3& rhs);
+    Vector3& operator*= (const Vector3& rhs);
+    Vector3& operator/= (const Vector3& rhs);
+    Vector3& operator*= (float scalar);
+    Vector3& operator/= (float scalar);
 
 public:
+    // Returns the magnitude of the vector
+    float Length() const;
+    // Returns this vector with magnitude 1 (undefined for zero-length vectors)
+    Vector3 Normalized() const;
+
+public:
+    static float Dot(const Vector3& a, const Vector3& b);
     // Calculates the distance between two vectors
     static float Distance(const Vector3& a, const Vector3& b);
 
+    inline static Vector3 zero() { return Vector3(0.0f, 0.0f, 0.0f); }
+    inline static Vector3 one() { return Vector3(1.0f, 1.0f, 1.0f); }
+
 public:
-    float z;
+    float x, y, z;
 };
 
-struct Vector4 : public Vector3
+// Componentwise arithmetic
+Vector3 operator+ (const Vector3& lhs, const Vector3& rhs);
+Vector3 operator- (const Vector3& lhs, const Vector3& rhs);
+Vector3 operator* (const Vector3& lhs, const Vector3& rhs);
+Vector3 operator/ (const Vector3& lhs, const Vector3& rhs);
+// Scalar arithmetic
+Vector3 operator* (const Vector3& lhs, float scalar);
+Vector3 operator* (float scalar, const Vector3& rhs);
+Vector3 operator/ (const Vector3& lhs, float scalar);
+// Exact float comparison
+bool operator== (const Vector3& lhs, const Vector3& rhs);
+bool operator!= (const Vector3& lhs, const Vector3& rhs);
+
+struct Vector4
 {
 public:
-    ~Vector4() = default;
     Vector4();
-    Vector4(const Vector2& _other);
-    Vector4(const Vector3& _other);
-    Vector4(const Vector4& _other);
     Vector4(float _x, float _y, float _z, float _w);
+    Vector4(const Vector3& _xyz, float _w);
+
+    Vector4 operator- () const;
+
+    Vector4& operator+= (const Vector4& rhs);
+    Vector4& operator-= (const Vector4& rhs);
+    Vector4& operator*= (const Vector4& rhs);
+    Vector4& operator/= (const Vector4& rhs);
+    Vector4& operator*= (float scalar);
+    Vector4& operator/= (float scalar);
 
 public:
-    float w;
+    // Returns the magnitude of the vector
+    float Length() const;
+    // Returns this vector with magnitude 1 (undefined for zero-length vectors)
+    Vector4 Normalized() const;
+
+public:
+    static float Dot(const Vector4& a, const Vector4& b);
+
+    inline static Vector4 zero() { return Vector4(0.0f, 0.0f, 0.0f, 0.0f); }
+    inline static Vector4 one() { return Vector4(1.0f, 1.0f, 1.0f, 1.0f); }
+
+public:
+    float x, y, z, w;
 };
+
+// Componentwise arithmetic
+Vector4 operator+ (const Vector4& lhs, const Vector4& rhs);
+Vector4 operator- (const Vector4& lhs, const Vector4& rhs);
+Vector4 operator* (const Vector4& lhs, const Vector4& rhs);
+Vector4 operator/ (const Vector4& lhs, const Vector4& rhs);
+// Scalar arithmetic
+Vector4 operator* (const Vector4& lhs, float scalar);
+Vector4 operator* (float scalar, const Vector4& rhs);
+Vector4 operator/ (const Vector4& lhs, float scalar);
+// Exact float comparison
+bool operator== (const Vector4& lhs, const Vector4& rhs);
+bool operator!= (const Vector4& lhs, const Vector4& rhs);
+
+//
+// MATRICES
+//
+
+struct Matrix4;
+
+// Column-major 3x3 matrix, indexed as mat[col][row] (same layout and semantics as glm::mat3)
+struct Matrix3
+{
+public:
+    ~Matrix3() = default;
+    // Initializes to identity
+    Matrix3();
+    Matrix3(const Matrix3& _other);
+    // Diagonal matrix: Matrix3(1.0f) == identity
+    explicit Matrix3(float _diagonal);
+    // Upper-left 3x3 of a Matrix4
+    explicit Matrix3(const Matrix4& _other);
+    Matrix3(const Vector3& _c0, const Vector3& _c1, const Vector3& _c2);
+    Matrix3(float _x0, float _y0, float _z0,
+            float _x1, float _y1, float _z1,
+            float _x2, float _y2, float _z2);
+
+    // Column access: mat[col][row]; &mat[0][0] is 9 contiguous floats for glUniformMatrix3fv
+    float* operator[] (int col) { return m[col]; }
+    const float* operator[] (int col) const { return m[col]; }
+
+    friend Matrix3 operator* (const Matrix3& lhs, const Matrix3& rhs);
+    friend Vector3 operator* (const Matrix3& lhs, const Vector3& rhs);
+    friend bool operator== (const Matrix3& lhs, const Matrix3& rhs);
+    friend bool operator!= (const Matrix3& lhs, const Matrix3& rhs);
+
+    Matrix3 operator* (float scalar) const;
+    Matrix3& operator*= (const Matrix3& rhs);
+    Matrix3& operator*= (float scalar);
+
+public:
+    inline static Matrix3 Identity() { return Matrix3(1.0f); }
+
+private:
+    float m[3][3];
+};
+
+// Column-major 4x4 matrix, indexed as mat[col][row] (same layout and semantics as glm::mat4)
+struct Matrix4
+{
+public:
+    ~Matrix4() = default;
+    // Initializes to identity
+    Matrix4();
+    Matrix4(const Matrix4& _other);
+    // Diagonal matrix: Matrix4(1.0f) == identity
+    explicit Matrix4(float _diagonal);
+    Matrix4(const Vector4& _c0, const Vector4& _c1, const Vector4& _c2, const Vector4& _c3);
+    Matrix4(float _x0, float _y0, float _z0, float _w0,
+            float _x1, float _y1, float _z1, float _w1,
+            float _x2, float _y2, float _z2, float _w2,
+            float _x3, float _y3, float _z3, float _w3);
+
+    // Column access: mat[col][row]; &mat[0][0] is 16 contiguous floats for glUniformMatrix4fv
+    float* operator[] (int col) { return m[col]; }
+    const float* operator[] (int col) const { return m[col]; }
+
+    friend Matrix4 operator* (const Matrix4& lhs, const Matrix4& rhs);
+    friend Vector4 operator* (const Matrix4& lhs, const Vector4& rhs);
+    friend bool operator== (const Matrix4& lhs, const Matrix4& rhs);
+    friend bool operator!= (const Matrix4& lhs, const Matrix4& rhs);
+
+    Matrix4 operator* (float scalar) const;
+    Matrix4& operator*= (const Matrix4& rhs);
+    Matrix4& operator*= (float scalar);
+
+public:
+    inline static Matrix4 Identity() { return Matrix4(1.0f); }
+
+    // Post-multiplied transforms, same semantics as glm::translate/rotate/scale/ortho
+    static Matrix4 Translate(const Matrix4& mat, const Vector3& translation);
+    static Matrix4 Rotate(const Matrix4& mat, float angleRadians, const Vector3& axis);
+    static Matrix4 Scale(const Matrix4& mat, const Vector3& scale);
+    static Matrix4 Ortho(float left, float right, float bottom, float top, float zNear, float zFar);
+
+private:
+    float m[4][4];
+};
+
+// The OpenGL upload path (&mat[0][0]) relies on tightly packed column-major storage
+static_assert(sizeof(Matrix3) == 9 * sizeof(float), "Matrix3 must be 9 contiguous floats");
+static_assert(sizeof(Matrix4) == 16 * sizeof(float), "Matrix4 must be 16 contiguous floats");
 
 }
 

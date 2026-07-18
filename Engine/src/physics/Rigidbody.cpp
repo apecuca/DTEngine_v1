@@ -38,7 +38,7 @@ void Rigidbody::UpdatePhysics()
 
     // Linear
     linearVelocity += (sys_physics->GetGravity() * gravityScale + acceleration) * dt;
-    linearVelocity = linearVelocity * std::max(0.0f, 1.0f - linearDrag * dt);
+    linearVelocity *= std::max(0.0f, 1.0f - linearDrag * dt);
     gameObject.transform->SetPosition(gameObject.transform->GetPosition() + linearVelocity * dt);
 
     // Angular (for a future update on collision)

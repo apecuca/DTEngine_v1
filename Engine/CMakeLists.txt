@@ -67,7 +67,6 @@ add_library(Engine STATIC ${ENGINE_HEADERS} ${ENGINE_SOURCES})
 
 find_package(glfw3 CONFIG REQUIRED)
 find_package(glad CONFIG REQUIRED)
-find_package(glm CONFIG REQUIRED)
 find_package(Stb REQUIRED)
 
 # ---- directories ----
@@ -83,11 +82,10 @@ target_include_directories(Engine
 
 # ---- linking ----
 
-target_link_libraries(Engine 
+target_link_libraries(Engine
     PRIVATE
         glad::glad
         glfw
-        glm::glm
 )
 
 # ---- resources ----

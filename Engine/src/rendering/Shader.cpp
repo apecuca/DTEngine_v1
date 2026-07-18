@@ -4,7 +4,6 @@
 
 #include "glad/glad.h"
 #include <stdexcept>
-#include "glm/glm.hpp"
 
 using namespace DTEngine;
 
@@ -91,15 +90,19 @@ void Shader::SetUInt(const std::string& name, unsigned int value) const
 // ------------------------------------------------------------------------
 void Shader::SetVec4(const std::string& name, const Vector4& value) const
 {
-    glm::vec4 vec(value.x, value.y, value.z, value.w);
-    glUniform4fv(glGetUniformLocation(program, name.c_str()), 1, &vec[0]);
+    glUniform4f(glGetUniformLocation(program, name.c_str()), value.x, value.y, value.z, value.w);
 }
 void Shader::SetVec4(const std::string& name, float x, float y, float z, float w) const
 {
     glUniform4f(glGetUniformLocation(program, name.c_str()), x, y, z, w);
 }
 // ------------------------------------------------------------------------
-void Shader::SetMat4(const std::string& name, const glm::mat4& mat) const
+void Shader::SetMat3(const std::string& name, const Matrix3& mat) const
+{
+    glUniformMatrix3fv(glGetUniformLocation(program, name.c_str()), 1, GL_FALSE, &mat[0][0]);
+}
+// ------------------------------------------------------------------------
+void Shader::SetMat4(const std::string& name, const Matrix4& mat) const
 {
     glUniformMatrix4fv(glGetUniformLocation(program, name.c_str()), 1, GL_FALSE, &mat[0][0]);
 }

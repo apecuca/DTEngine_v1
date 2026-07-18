@@ -173,8 +173,7 @@ void Transform::SetPosition(const Vector2& position)
         return;
     }
 
-    Vector2 parentPosition = parentTransform->GetPosition();
-    Vector2 delta(position.x - parentPosition.x, position.y - parentPosition.y);
+    Vector2 delta = position - parentTransform->GetPosition();
     delta.Rotate(-parentTransform->GetRotation());
     localPosition = SafeDiv(delta, parentTransform->GetScale());
 }

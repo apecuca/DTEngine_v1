@@ -186,8 +186,8 @@ void PhysicsSystem::ResolveCollision(POHandler& a, POHandler& b,
     // Relative velocity between the two bodies
     Vector2 velA = rbA ? rbA->linearVelocity : Vector2(0.0f, 0.0f);
     Vector2 velB = rbB ? rbB->linearVelocity : Vector2(0.0f, 0.0f);
-    Vector2 relVel = Vector2(velA.x - velB.x, velA.y - velB.y);
-    float velAlongNormal = relVel.x * normal.x + relVel.y * normal.y;
+    Vector2 relVel = velA - velB;
+    float velAlongNormal = Vector2::Dot(relVel, normal);
 
     // Objects already moving apart - no impulse needed
     if (velAlongNormal > 0.0f) return;
@@ -203,7 +203,7 @@ void PhysicsSystem::ResolveCollision(POHandler& a, POHandler& b,
 
     // Coulomb's friction
     Vector2 tangent(-normal.y, normal.x);
-    float velAlongTangent = relVel.x * tangent.x + relVel.y * tangent.y;
+    float velAlongTangent = Vector2::Dot(relVel, tangent);
 
     float jt = -velAlongTangent / totalInvMass;
     float mu = (colA->friction + colB->friction) * 0.5f;
@@ -266,10 +266,10 @@ Vector2 PhysicsSystem::GetGravity() const
 
 bool PhysicsSystem::Raycast(Vector2 origin, Vector2 direction, float distance, LayerMask mask, RaycastHit& result)
 {
-    float len = std::sqrt(direction.x * direction.x + direction.y * direction.y);
+    float len = direction.Length();
     if (len == 0.0f) return false;
 
-    Vector2 dir(direction.x / len, direction.y / len);
+    Vector2 dir = direction / len;
 
     float closestT = distance;
     BoxCollider* hitCollider = nullptr;
@@ -313,7 +313,7 @@ bool PhysicsSystem::Raycast(Vector2 origin, Vector2 direction, float distance, L
 
     if (hitCollider == nullptr) return false;
 
-    Vector2 point(origin.x + dir.x * closestT, origin.y + dir.y * closestT);
+    Vector2 point = origin + dir * closestT;
     result = RaycastHit(hitCollider, hitRigidbody, closestT, point, true);
     return true;
 }
@@ -322,8 +322,8 @@ bool PhysicsSystem::OverlapBox(Vector2 origin, Vector2 size, LayerMask mask, std
 {
     Vector2 half = size * 0.5f;
     Bounds query;
-    query.min = Vector2(origin.x - half.x, origin.y - half.y);
-    query.max = Vector2(origin.x + half.x, origin.y + half.y);
+    query.min = origin - half;
+    query.max = origin + half;
 
     bool found = false;
 

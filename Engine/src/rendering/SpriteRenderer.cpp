@@ -10,9 +10,6 @@
 #include <DTEngine/Animator.hpp>
 
 #include "glad/glad.h"
-#include <glm/glm.hpp>
-#include <glm/gtc/matrix_transform.hpp>
-#include <glm/gtc/type_ptr.hpp>
 
 using namespace DTEngine;
 
@@ -105,29 +102,31 @@ void SpriteRenderer::RenderCall(Shader* overrideShader)
     Vector2 worldPosition = gameObject.transform->GetPosition();
     Vector2 worldScale = gameObject.transform->GetScale();
     float worldRotation = gameObject.transform->GetRotation();
-    glm::vec3 position(worldPosition.x, worldPosition.y, 0.0f);
-    glm::vec3 scale(worldScale.x, worldScale.y, 1.0f);
-    glm::vec3 rotation(0.0f, 0.0f, worldRotation);
+    Vector3 position(worldPosition, 0.0f);
+    Vector3 scale(worldScale, 1.0f);
+    Vector3 rotation(0.0f, 0.0f, worldRotation);
     Vector2 spriteInternalSize = sprt.GetSize();
-    glm::mat4 projMat(1.0f), viewMat(1.0f), modelMat(1.0f);
+    Matrix4 projMat(1.0f), viewMat(1.0f), modelMat(1.0f);
 
     // Transform the matrices
-    projMat = glm::ortho(-aspect * fov, aspect * fov, -1.0f * fov, 1.0f * fov, 0.0f, 100.0f);
-    viewMat = glm::translate(viewMat, glm::vec3(0.0f, 0.0f, -10.0f));
-    modelMat = glm::translate(modelMat, position);
+    projMat = Matrix4::Ortho(-aspect * fov, aspect * fov, -1.0f * fov, 1.0f * fov, 0.0f, 100.0f);
+    viewMat = Matrix4::Translate(viewMat, Vector3(0.0f, 0.0f, -10.0f));
+    modelMat = Matrix4::Translate(modelMat, position);
     // Rotation
-    if (glm::length(rotation) != 0)
+    if (rotation.Length() != 0)
     {
-        modelMat = glm::rotate(modelMat,
-            glm::radians(glm::length(rotation)),
-            glm::normalize(rotation));
+        modelMat = Matrix4::Rotate(modelMat,
+            Radians(rotation.Length()),
+            rotation.Normalized());
     }
     // Sprite size
-    glm::vec3 spriteSize = glm::vec3(spriteInternalSize.x, spriteInternalSize.y, 1.0f) / sprt.pixelsPerUnit;
-    spriteSize.z = 1.0f;
-    modelMat = glm::scale(modelMat, spriteSize);
+    Vector3 spriteSize(
+        spriteInternalSize.x / sprt.pixelsPerUnit,
+        spriteInternalSize.y / sprt.pixelsPerUnit,
+        1.0f);
+    modelMat = Matrix4::Scale(modelMat, spriteSize);
     // GameObject scale
-    modelMat = glm::scale(modelMat, scale);
+    modelMat = Matrix4::Scale(modelMat, scale);
 
     // Update shader
     shad.Bind();

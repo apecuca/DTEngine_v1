@@ -2,12 +2,13 @@
 #define DTENGINE_SHADER_H
 
 #include <string>
-#include "glm/mat4x4.hpp"
 
 namespace DTEngine
 {
 
-class Vector4;
+struct Vector4;
+struct Matrix3;
+struct Matrix4;
 
 class Shader
 {
@@ -24,7 +25,8 @@ public:
     void SetUInt(const std::string& name, unsigned int value) const;
     void SetVec4(const std::string& name, const Vector4& value) const;
     void SetVec4(const std::string& name, float x, float y, float z, float w) const;
-    void SetMat4(const std::string& name, const glm::mat4& mat) const;
+    void SetMat3(const std::string& name, const Matrix3& mat) const;
+    void SetMat4(const std::string& name, const Matrix4& mat) const;
 
 private:
     void Bind();
