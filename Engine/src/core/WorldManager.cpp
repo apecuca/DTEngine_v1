@@ -8,16 +8,9 @@
 
 using namespace DTEngine;
 
-/*
-void WorldManager::LoadWorld(std::unique_ptr<World>& world)
+int WorldManager::RegisterWorld(const std::string& name, std::function<void()> startFunction, bool defaultObjects)
 {
-    SystemRegistry::GetSystem<WorldSystem>()->LoadWorld(world);
-}
-*/
-
-int WorldManager::RegisterWorld(std::string name, std::function<void()> startFunction)
-{
-    return SystemRegistry::GetSystem<WorldSystem>()->RegisterWorld(name, startFunction);
+    return SystemRegistry::GetSystem<WorldSystem>()->RegisterWorld(name, startFunction, defaultObjects);
 }
 
 void WorldManager::LoadWorld(int index)
@@ -25,14 +18,14 @@ void WorldManager::LoadWorld(int index)
     return SystemRegistry::GetSystem<WorldSystem>()->LoadWorld(index);
 }
 
-void WorldManager::LoadWorld(std::string name)
+void WorldManager::LoadWorld(const std::string& name)
 {
     return SystemRegistry::GetSystem<WorldSystem>()->LoadWorld(name);
 }
 
-EntityHandle<GameObject> WorldManager::Instantiate()
+EntityHandle<GameObject> WorldManager::Instantiate(const std::string& name)
 {
-    return SystemRegistry::GetSystem<WorldSystem>()->GetActiveWorld()->Instantiate();
+    return SystemRegistry::GetSystem<WorldSystem>()->GetActiveWorld()->Instantiate(name);
 }
 
 void WorldManager::Destroy(const EntityHandle<GameObject>& object)

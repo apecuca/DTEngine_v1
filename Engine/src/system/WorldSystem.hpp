@@ -13,6 +13,18 @@ namespace DTEngine
 
 class World;
 
+struct WorldBlueprint
+{
+public:
+   ~WorldBlueprint() = default;
+   WorldBlueprint(const std::string& _name, bool _defaultObjects, std::function<void()> _startFunction) :
+      name(_name), defaultObjects(_defaultObjects), startFunction(_startFunction) { }
+
+   const std::string name;
+   const bool defaultObjects; // Should instantiate default world objects, like a Camera
+   std::function<void()> startFunction;
+};
+
 class WorldSystem : public InternalSystem
 {
 friend class SystemRegistry;
@@ -24,9 +36,9 @@ public:
 
 public:
     // Saves a world to be loaded
-    int RegisterWorld(std::string name, std::function<void()> startFunction);
+    int RegisterWorld(std::string name, std::function<void()> startFunction, bool defaultObjects);
     void LoadWorld(int index);
-    void LoadWorld(std::string name);
+    void LoadWorld(const std::string& name);
 
     World* GetActiveWorld();
     bool IsWorldActive();
@@ -47,7 +59,7 @@ private:
 private:
     std::unique_ptr<World> activeWorld;
 
-    std::vector<std::pair<std::string, std::function<void()>>> registeredWorlds;
+    std::vector<WorldBlueprint> registeredWorlds;
 
     bool worldLoadPending = false;
     int  pendingWorldIndex = -1;

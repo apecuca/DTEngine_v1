@@ -37,7 +37,7 @@ Game::Game()
         // Enemy
         auto enemy = WorldManager::Instantiate();
         enemy->SetLayer("Enemy");
-        enemy->transform->localPosition = Vector2(-2.0f, 2.0f);
+        enemy->transform->SetPosition(Vector2(-2.0f, 2.0f));
         enemy->AddComponent<SpriteRenderer>();
         enemy->AddComponent<BoxCollider>();
         auto eRb = enemy->AddComponent<Rigidbody>();
@@ -46,8 +46,8 @@ Game::Game()
         // Ground
         auto ground = WorldManager::Instantiate();
         ground->SetLayer("Ground");
-        ground->transform->localPosition.y = -4.0f;
-        ground->transform->localScale.x = 10.0f;
+        ground->transform->SetPosition(Vector2(0.0f, -4.0f));
+        ground->transform->SetScale(Vector2(10.0f, 1.0f));
         auto s = ground->AddComponent<SpriteRenderer>();
         auto r = ground->AddComponent<Rigidbody>();
         auto b = ground->AddComponent<BoxCollider>();
@@ -69,17 +69,16 @@ Game::Game()
 
         // child
         auto child = WorldManager::Instantiate();
-        child->transform->localPosition.x = 2.0f;
-        child->transform->localPosition.y = 2.0f;
-        child->transform->localScale = Vector2::one() * 0.5f;
+        child->transform->SetPosition(Vector2(2.0f, 2.0f));
+        child->transform->SetScale(Vector2::one() * 0.5f);
         child->transform->SetParent(player->transform);
         child->AddComponent<SpriteRenderer>()->color = Vector4(0.8f, 1.0f, 1.0f, 1.0f);
 
         // Ground
         auto ground = WorldManager::Instantiate();
         ground->SetLayer("Ground");
-        ground->transform->localPosition.y = -4.0f;
-        ground->transform->localScale.x = 10.0f;
+        ground->transform->SetPosition(Vector2(0.0f, -4.0f));
+        ground->transform->SetScale(Vector2(10.0f, 1.0f));
         auto s = ground->AddComponent<SpriteRenderer>();
         auto r = ground->AddComponent<Rigidbody>();
         auto b = ground->AddComponent<BoxCollider>();

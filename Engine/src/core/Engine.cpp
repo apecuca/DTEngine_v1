@@ -59,10 +59,9 @@ void Engine::Run()
         //
         // This is the main loop of the engine
         //
-        Window* win = Window::GetInstance();
-
+        
         // Update internal pre-render stuff
-        win->ReadInputs();
+        Window::instance->ReadInputs();
         sys_input->ReadInputs();
         sys_time->UpdateTimeVariables();
 

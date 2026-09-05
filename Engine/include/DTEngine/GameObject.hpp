@@ -26,7 +26,7 @@ friend class PhysicsSystem;
 
 public:
     virtual ~GameObject();
-    GameObject();
+    GameObject(std::string _name);
 
 public:
     // Handle to this object's own slot in the pool; invalid for objects
@@ -108,6 +108,7 @@ public:
 
     bool clickable;
     std::string tag;
+    std::string name;
 
 private:
     std::string layer;

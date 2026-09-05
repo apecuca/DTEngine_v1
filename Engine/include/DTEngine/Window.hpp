@@ -16,6 +16,7 @@ friend class RenderingSystem;
 friend class Engine;
 friend class TimeSystem;
 friend class InputSystem;
+friend class Camera;
 
 public:
     ~Window();
@@ -23,7 +24,6 @@ public:
 
 public:
     Vector2 GetSize() const;
-    Vector2 ScreenToWorldPoint(const Vector2& point) const;
 
     void SetSolidState(bool state, bool overrideInternalLogic);
 
@@ -47,13 +47,8 @@ private:
     bool solid;
     bool overridingState;
     int width, height;
-    constexpr static float defaultFov = 5.0f;
 
     static DTEngine::Window* instance;
-
-public:
-    float fov;
-
 };
 }
 

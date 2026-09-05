@@ -16,10 +16,10 @@ friend class WorldSystem;
 
 public:
     ~World();
-    World();
+    World(std::string _name);
 
     // Instantiated a new object in the world
-    EntityHandle<GameObject> Instantiate();
+    EntityHandle<GameObject> Instantiate(const std::string name);
 
     // Destroys an object instantiated in the world
     void Destroy(const EntityHandle<GameObject>& obj);

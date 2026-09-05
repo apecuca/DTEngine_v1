@@ -26,9 +26,10 @@ GameObject::~GameObject()
     }
 }
 
-GameObject::GameObject() :
+GameObject::GameObject(std::string _name) :
     Entity(),
-    clickable(true)
+    clickable(true),
+    name(_name)
 {
     SetLayer("Default");
 

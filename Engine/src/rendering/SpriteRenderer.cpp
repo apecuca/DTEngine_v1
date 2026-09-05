@@ -7,7 +7,7 @@
 #include <DTEngine/Window.hpp>
 #include "system/RenderingSystem.hpp"
 #include "system/SystemRegistry.hpp"
-#include <DTEngine/Animator.hpp>
+#include <DTEngine/Camera.hpp>
 
 #include "glad/glad.h"
 
@@ -40,7 +40,7 @@ SpriteRenderer::SpriteRenderer(GameObject& _gameObject) :
        -0.5f,  0.5f,        0.0f, 1.0f  // top left
     };
     
-    unsigned int indices[] = {  // note that we start from 0!
+    unsigned int indices[] = {
         0, 1, 3,   // first triangle
         1, 2, 3    // second triangle
     };  
@@ -49,12 +49,14 @@ SpriteRenderer::SpriteRenderer(GameObject& _gameObject) :
     glGenVertexArrays(1, &VAO);
     glGenBuffers(1, &VBO);
     glGenBuffers(1, &EBO);
-    // bind the Vertex Array Object first, then bind and set vertex buffer(s), and then configure vertex attributes(s).
+    // bind the Vertex Array Object
     glBindVertexArray(VAO);
 
+    // bind and set vertex buffer
     glBindBuffer(GL_ARRAY_BUFFER, VBO);
     glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
 
+    // Bind and set element buffer (saves memory when neighboring triangles use the same corner points)
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
 
@@ -66,14 +68,8 @@ SpriteRenderer::SpriteRenderer(GameObject& _gameObject) :
     glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)(2 * sizeof(float)));
     glEnableVertexAttribArray(1);
 
-    // note that this is allowed, the call to glVertexAttribPointer registered VBO as the vertex attribute's bound vertex buffer object so afterwards we can safely unbind
+    // Do NOT unbind the EBO while a VAO is active as the bound element buffer object IS stored in the VAO
     glBindBuffer(GL_ARRAY_BUFFER, 0); 
-
-    // remember: do NOT unbind the EBO while a VAO is active as the bound element buffer object IS stored in the VAO; keep the EBO bound.
-    //glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
-
-    // You can unbind the VAO afterwards so other VAO calls won't accidentally modify this VAO, but this rarely happens. Modifying other
-    // VAOs requires a call to glBindVertexArray anyways so we generally don't unbind VAOs (nor VBOs) when it's not directly necessary.
     glBindVertexArray(0); 
 }
 
@@ -90,15 +86,18 @@ void SpriteRenderer::Update()
 void SpriteRenderer::RenderCall(Shader* overrideShader)
 {
     RenderingSystem* rend = SystemRegistry::GetSystem<RenderingSystem>();
-    Window* window = Window::GetInstance();
     int spriteId = animationSpriteId != -1 ? animationSpriteId : usedSpriteId;
     Sprite& sprt = rend->GetSprite(spriteId);
     Shader& shad = overrideShader ? *overrideShader : rend->GetShader(usedShaderId);
 
+    Camera* cam = Camera::main;
+    auto camPos = cam->gameObject.transform->GetPosition();
+    auto camRot = cam->gameObject.transform->GetRotation();
+
     // Cool variables :)
-    Vector2 winSize = window->GetSize();
+    Vector2 winSize = Window::GetInstance()->GetSize();
     float aspect = winSize.x / winSize.y;
-    float fov = window->fov;
+    float fov = cam->fov;
     Vector2 worldPosition = gameObject.transform->GetPosition();
     Vector2 worldScale = gameObject.transform->GetScale();
     float worldRotation = gameObject.transform->GetRotation();
@@ -111,6 +110,7 @@ void SpriteRenderer::RenderCall(Shader* overrideShader)
     // Rotation
     if (worldRotation != 0.0f)
         modelMat = Matrix3::Rotate(modelMat, Radians(worldRotation));
+    
     // Sprite size
     Vector2 spriteSize = spriteInternalSize / sprt.pixelsPerUnit;
     modelMat = Matrix3::Scale(modelMat, spriteSize);

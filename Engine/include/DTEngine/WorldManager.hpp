@@ -21,10 +21,10 @@ class World;
 class WorldManager final
 {
 public:
-    static int RegisterWorld(std::string name, std::function<void()> startFunction);
+    static int RegisterWorld(const std::string& name, std::function<void()> startFunction, bool defaultObjects = true);
     static void LoadWorld(int index);
-    static void LoadWorld(std::string name);
-    static EntityHandle<GameObject> Instantiate();
+    static void LoadWorld(const std::string& name);
+    static EntityHandle<GameObject> Instantiate(const std::string& name = "GameObject");
     static void Destroy(const EntityHandle<GameObject>& object);
 
 private:

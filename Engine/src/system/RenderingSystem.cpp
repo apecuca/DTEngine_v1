@@ -6,6 +6,7 @@
 #include <DTEngine/Shader.hpp>
 #include <DTEngine/Utils.hpp>
 #include <DTEngine/GameObject.hpp>
+#include <DTEngine/Camera.hpp>
 #include "system/SystemRegistry.hpp"
 #include "system/PathSystem.hpp"
 
@@ -204,11 +205,13 @@ void RenderingSystem::RenderCycle()
             return (a->renderOrder < b->renderOrder);
         });
 
-    // SCENE PASS
-    RenderPass(worldFBO, RenderPassType::WORLD);
+    if (Camera::main != nullptr) {
+        // SCENE PASS
+        RenderPass(worldFBO, RenderPassType::WORLD);
 
-    // SOLID PASS (clickable objects only — used by IsPositionSolid)
-    RenderPass(solidFBO, RenderPassType::SOLID);
+        // SOLID PASS (clickable objects only — used by IsPositionSolid)
+        RenderPass(solidFBO, RenderPassType::SOLID);
+    }
 
     // FINAL PASS
     window->Clear();

@@ -5,9 +5,9 @@
 #include <DTEngine/WorldManager.hpp>
 #include <DTEngine/SpriteRenderer.hpp>
 #include <DTEngine/InputManager.hpp>
-#include <DTEngine/Window.hpp>
 #include <DTEngine/RenderingManager.hpp>
 #include <DTEngine/PhysicsManager.hpp>
+#include <DTEngine/Camera.hpp>
 
 #include <DTEngine/Utils.hpp>
 
@@ -53,7 +53,7 @@ void SuperComponent::Update()
                                           PhysicsManager::GetLayerMask({"Ground"}), hit);
 
     if (InputManager::GetKey(DTK_LCTRL)) {
-        gameObject.transform->SetPosition(Window::GetInstance()->ScreenToWorldPoint(InputManager::GetMousePosition()));
+        gameObject.transform->SetPosition(Camera::main->ScreenToWorldPoint(InputManager::GetMousePosition()));
         rb->linearVelocity = Vector2::zero();
 
         if (InputManager::GetKey(DTK_R))
@@ -85,7 +85,11 @@ void SuperComponent::Update()
 
 void SuperComponent::LateUpdate()
 {
-    //
+    auto pos = gameObject.transform->GetPosition();
+    auto rot = Camera::main->gameObject.transform->GetRotation();
+    Camera::main->gameObject.transform->SetPosition(pos);
+    if (InputManager::GetKey(DTK_R))
+        Camera::main->gameObject.transform->SetRotation(rot + (5.0f * TimeManager::GetDeltaTime()));
 }
 
 void SuperComponent::OnCollisionEnter(Collision& col)

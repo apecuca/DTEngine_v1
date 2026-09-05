@@ -2,6 +2,8 @@
 
 #include <DTEngine/World.hpp>
 #include "system/SystemRegistry.hpp"
+#include <DTEngine/WorldManager.hpp>
+#include <DTEngine/Camera.hpp>
 
 using namespace DTEngine;
 
@@ -32,21 +34,12 @@ bool WorldSystem::IsWorldActive()
     return true;
 }
 
-/*
-void WorldSystem::LoadWorld(std::unique_ptr<World>& world)
-{
-    auto instance = SystemRegistry::GetSystem<WorldSystem>();
-
-    instance->activeWorld.reset(world.release());
-}
-*/
-
-int WorldSystem::RegisterWorld(std::string name, std::function<void()> startFunction)
+int WorldSystem::RegisterWorld(std::string name, std::function<void()> startFunction, bool defaultObjects)
 {
     if (GetWorldIndex(name) != -1)
         throw std::runtime_error("World " + name + " was already registered");
 
-    registeredWorlds.emplace_back(name, startFunction);
+    registeredWorlds.emplace_back(name, defaultObjects, startFunction);
 
     return static_cast<int>(registeredWorlds.size() - 1);
 }
@@ -58,12 +51,12 @@ void WorldSystem::LoadWorld(int index)
 
     // Defer the actual swap to a safe point (OnEndOfFrame). Performing it here
     // would destroy the world while it may still be mid-update, freeing the
-    // very component/object that requested the load (use-after-free).
+    // very component/object that requested the load (use-after-free)
     pendingWorldIndex = index;
     worldLoadPending = true;
 }
 
-void WorldSystem::LoadWorld(std::string name)
+void WorldSystem::LoadWorld(const std::string& name)
 {
     int worldIndex = GetWorldIndex(name);
     if (worldIndex == -1)
@@ -80,16 +73,23 @@ void WorldSystem::ProcessWorldLoad()
     worldLoadPending = false;
     pendingWorldIndex = -1;
 
-    activeWorld.reset();
-    activeWorld = std::make_unique<World>();
+    WorldBlueprint& bp = registeredWorlds.at(index);
 
-    registeredWorlds.at(index).second();
+    activeWorld.reset();
+    activeWorld = std::make_unique<World>(bp.name);
+
+    if (bp.defaultObjects) {
+        auto cam = activeWorld->Instantiate("Camera");
+        cam->AddComponent<Camera>();
+    }
+
+    bp.startFunction();
 }
 
 int WorldSystem::GetWorldIndex(std::string name)
 {
     for (int i = 0; i < registeredWorlds.size(); i++) {
-        if (registeredWorlds.at(i).first == name)
+        if (registeredWorlds.at(i).name == name)
             return i;
     }
 

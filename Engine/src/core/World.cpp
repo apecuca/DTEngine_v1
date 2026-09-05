@@ -20,17 +20,17 @@ World::~World()
             pool->Release(ref.ptr);
 }
 
-World::World() :
-    GameObject()
+World::World(std::string _name) :
+    GameObject(_name)
 {
     //
 }
 
-EntityHandle<GameObject> World::Instantiate()
+EntityHandle<GameObject> World::Instantiate(const std::string name)
 {
     PoolSystem* pool = SystemRegistry::GetSystem<PoolSystem>();
 
-    EntitySlotRef ref = pool->Acquire(std::make_unique<GameObject>());
+    EntitySlotRef ref = pool->Acquire(std::make_unique<GameObject>(name));
     objectRefs.emplace_back(ref);
     pendingAwake.emplace_back(ref);
     pendingStart.emplace_back(ref);
