@@ -25,7 +25,7 @@ private:
 
     void Update() override;
 
-    void RenderCall(Shader* overrideShader = nullptr);
+    void RenderCall(const Matrix3& viewMat, const Matrix3& projMat, Shader* overrideShader = nullptr);
 
     void SetAnimationSprite(int spriteIndex);
 

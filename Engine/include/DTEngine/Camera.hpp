@@ -3,6 +3,7 @@
 #pragma once
 
 #include <DTEngine/Component.hpp>
+#include <DTEngine/Utils.hpp>
 
 namespace DTEngine
 {
@@ -15,6 +16,12 @@ public:
 
 public:
     Vector2 ScreenToWorldPoint(const Vector2& point) const;
+    Vector2 WorldToScreenPoint(const Vector2& point) const;
+
+    // World space -> camera space (the inverse of the camera's world transform)
+    Matrix3 GetViewMatrix() const;
+    // Camera space -> clip space (orthographic, derived from fov and the window aspect)
+    Matrix3 GetProjectionMatrix() const;
 
 private:
     constexpr static float defaultFov = 5.0f;

@@ -42,4 +42,7 @@ private:
     float timer = 0.0f;
     bool grounded = false;
 
+    float x = 0.0f;
+    bool cameraFollow = true;
+
 };

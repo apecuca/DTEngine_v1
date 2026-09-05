@@ -544,6 +544,30 @@ Matrix3& Matrix3::operator*= (float scalar)
     return *this;
 }
 
+Matrix3 Matrix3::Inverse() const
+{
+    float det = + m[0][0] * (m[1][1] * m[2][2] - m[2][1] * m[1][2])
+                - m[1][0] * (m[0][1] * m[2][2] - m[2][1] * m[0][2])
+                + m[2][0] * (m[0][1] * m[1][2] - m[1][1] * m[0][2]);
+
+    float invDet = 1.0f / det;
+
+    Matrix3 result(0.0f);
+
+    // Adjugate over the determinant
+    result.m[0][0] = + (m[1][1] * m[2][2] - m[2][1] * m[1][2]) * invDet;
+    result.m[1][0] = - (m[1][0] * m[2][2] - m[2][0] * m[1][2]) * invDet;
+    result.m[2][0] = + (m[1][0] * m[2][1] - m[2][0] * m[1][1]) * invDet;
+    result.m[0][1] = - (m[0][1] * m[2][2] - m[2][1] * m[0][2]) * invDet;
+    result.m[1][1] = + (m[0][0] * m[2][2] - m[2][0] * m[0][2]) * invDet;
+    result.m[2][1] = - (m[0][0] * m[2][1] - m[2][0] * m[0][1]) * invDet;
+    result.m[0][2] = + (m[0][1] * m[1][2] - m[1][1] * m[0][2]) * invDet;
+    result.m[1][2] = - (m[0][0] * m[1][2] - m[1][0] * m[0][2]) * invDet;
+    result.m[2][2] = + (m[0][0] * m[1][1] - m[1][0] * m[0][1]) * invDet;
+
+    return result;
+}
+
 Matrix3 Matrix3::Translate(const Matrix3& mat, const Vector2& translation)
 {
     Matrix3 result(mat);

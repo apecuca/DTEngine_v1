@@ -206,11 +206,15 @@ void RenderingSystem::RenderCycle()
         });
 
     if (Camera::main != nullptr) {
+        // Constant for the whole frame — built once and shared by both passes
+        const Matrix3 viewMat = Camera::main->GetViewMatrix();
+        const Matrix3 projMat = Camera::main->GetProjectionMatrix();
+
         // SCENE PASS
-        RenderPass(worldFBO, RenderPassType::WORLD);
+        RenderPass(worldFBO, RenderPassType::WORLD, viewMat, projMat);
 
         // SOLID PASS (clickable objects only — used by IsPositionSolid)
-        RenderPass(solidFBO, RenderPassType::SOLID);
+        RenderPass(solidFBO, RenderPassType::SOLID, viewMat, projMat);
     }
 
     // FINAL PASS
@@ -225,7 +229,8 @@ void RenderingSystem::RenderCycle()
     window->SwapBuffers();
 }
 
-void RenderingSystem::RenderPass(unsigned int& frameBufferObject, const RenderPassType renderType)
+void RenderingSystem::RenderPass(unsigned int& frameBufferObject, const RenderPassType renderType,
+                                 const Matrix3& viewMat, const Matrix3& projMat)
 {
     glBindFramebuffer(GL_FRAMEBUFFER, frameBufferObject);
 
@@ -235,9 +240,9 @@ void RenderingSystem::RenderPass(unsigned int& frameBufferObject, const RenderPa
     {
         if (renderType == RenderPassType::SOLID) {
             if (!spr->gameObject.clickable) continue;
-            spr->RenderCall(solidPassShader.get());
+            spr->RenderCall(viewMat, projMat, solidPassShader.get());
         } else {
-            spr->RenderCall();
+            spr->RenderCall(viewMat, projMat);
         }
     }
 

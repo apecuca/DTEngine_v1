@@ -4,10 +4,8 @@
 #include <DTEngine/Utils.hpp>
 #include <DTEngine/Shader.hpp>
 #include <DTEngine/Sprite.hpp>
-#include <DTEngine/Window.hpp>
 #include "system/RenderingSystem.hpp"
 #include "system/SystemRegistry.hpp"
-#include <DTEngine/Camera.hpp>
 
 #include "glad/glad.h"
 
@@ -83,29 +81,21 @@ void SpriteRenderer::Update()
     //
 }
 
-void SpriteRenderer::RenderCall(Shader* overrideShader)
+void SpriteRenderer::RenderCall(const Matrix3& viewMat, const Matrix3& projMat, Shader* overrideShader)
 {
     RenderingSystem* rend = SystemRegistry::GetSystem<RenderingSystem>();
     int spriteId = animationSpriteId != -1 ? animationSpriteId : usedSpriteId;
     Sprite& sprt = rend->GetSprite(spriteId);
     Shader& shad = overrideShader ? *overrideShader : rend->GetShader(usedShaderId);
 
-    Camera* cam = Camera::main;
-    auto camPos = cam->gameObject.transform->GetPosition();
-    auto camRot = cam->gameObject.transform->GetRotation();
-
     // Cool variables :)
-    Vector2 winSize = Window::GetInstance()->GetSize();
-    float aspect = winSize.x / winSize.y;
-    float fov = cam->fov;
     Vector2 worldPosition = gameObject.transform->GetPosition();
     Vector2 worldScale = gameObject.transform->GetScale();
     float worldRotation = gameObject.transform->GetRotation();
     Vector2 spriteInternalSize = sprt.GetSize();
-    Matrix3 projMat(1.0f), modelMat(1.0f);
+    Matrix3 modelMat(1.0f);
 
     // Transform the matrices
-    projMat = Matrix3::Ortho(-aspect * fov, aspect * fov, -1.0f * fov, 1.0f * fov);
     modelMat = Matrix3::Translate(modelMat, worldPosition);
     // Rotation
     if (worldRotation != 0.0f)
@@ -120,6 +110,7 @@ void SpriteRenderer::RenderCall(Shader* overrideShader)
     // Update shader
     shad.Bind();
     shad.SetMat3("projection", projMat);
+    shad.SetMat3("view", viewMat);
     shad.SetMat3("model", modelMat);
     shad.SetVec4("color", color);
 

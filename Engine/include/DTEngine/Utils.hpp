@@ -349,6 +349,9 @@ public:
 public:
     inline static Matrix3 Identity() { return Matrix3(1.0f); }
 
+    // Returns the inverse of this matrix (undefined for singular matrices)
+    Matrix3 Inverse() const;
+
     // Post-multiplied 2D affine transforms (homogeneous coordinates)
     static Matrix3 Translate(const Matrix3& mat, const Vector2& translation);
     // Counter-clockwise rotation

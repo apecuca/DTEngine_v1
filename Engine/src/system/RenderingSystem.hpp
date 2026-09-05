@@ -56,7 +56,8 @@ private:
     void RenderCycle();
 
     enum RenderPassType { WORLD, SOLID };
-    void RenderPass(unsigned int& frameBufferObject, const RenderPassType renderType);
+    void RenderPass(unsigned int& frameBufferObject, const RenderPassType renderType,
+                    const Matrix3& viewMat, const Matrix3& projMat);
 
 private:
     std::unique_ptr<DTEngine::Window> window;

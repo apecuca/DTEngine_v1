@@ -36,6 +36,7 @@ void SuperComponent::Start()
 {
     if (gameObject.transform->ChildCount() > 0) {
         child = gameObject.transform->ChildAt(0);
+        cameraFollow = false;
     }
 }
 
@@ -46,6 +47,8 @@ void SuperComponent::FixedUpdate()
 
 void SuperComponent::Update()
 {
+    x = 0.0f;
+
     std::vector<RaycastHit> hit;
     Vector2 feetPosition = gameObject.transform->GetPosition();
     feetPosition.y -= 0.55f;
@@ -57,13 +60,13 @@ void SuperComponent::Update()
         rb->linearVelocity = Vector2::zero();
 
         if (InputManager::GetKey(DTK_R))
-            gameObject.transform->localRotation += 20.0f * TimeManager::GetDeltaTime();
+            gameObject.transform->localRotation += 180.0f * TimeManager::GetDeltaTime();
     }
     else {
         if (InputManager::GetKey(DTK_RIGHT))
-            rb->linearVelocity.x = moveSpeed;
-        else if (InputManager::GetKey(DTK_LEFT))
-            rb->linearVelocity.x = -moveSpeed;
+            x += 1.0f;
+        if (InputManager::GetKey(DTK_LEFT))
+            x -= 1.0f;
 
         if (InputManager::GetKey(DTK_SPACE) && grounded)
             rb->linearVelocity.y = jumpForce;
@@ -76,6 +79,8 @@ void SuperComponent::Update()
             child->SetParent(nullptr);
     }
 
+    rb->linearVelocity.x = x * moveSpeed;
+
     if (InputManager::GetKeyDown(DTK_ALPHA1))
         WorldManager::LoadWorld("First");
 
@@ -87,9 +92,12 @@ void SuperComponent::LateUpdate()
 {
     auto pos = gameObject.transform->GetPosition();
     auto rot = Camera::main->gameObject.transform->GetRotation();
-    Camera::main->gameObject.transform->SetPosition(pos);
-    if (InputManager::GetKey(DTK_R))
-        Camera::main->gameObject.transform->SetRotation(rot + (5.0f * TimeManager::GetDeltaTime()));
+    if (cameraFollow)
+        Camera::main->gameObject.transform->SetPosition(pos);
+    if (InputManager::GetKey(DTK_E))
+        Camera::main->gameObject.transform->SetRotation(rot + (180.0f * TimeManager::GetDeltaTime()));
+    if (InputManager::GetKey(DTK_Q))
+        Camera::main->gameObject.transform->SetRotation(rot - (180.0f * TimeManager::GetDeltaTime()));
 }
 
 void SuperComponent::OnCollisionEnter(Collision& col)
