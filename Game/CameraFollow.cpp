@@ -19,12 +19,10 @@ CameraFollow::CameraFollow(GameObject& _gameObject) :
 
 void CameraFollow::LateUpdate()
 {
-    if (!followTarget || !Camera::main)
-        return;
-
     auto rot = gameObject.transform->GetRotation();
 
-    gameObject.transform->SetPosition(followTarget->GetPosition());
+    if (followTarget)
+        gameObject.transform->SetPosition(followTarget->GetPosition());
 
     if (InputManager::GetKey(DTK_E))
         gameObject.transform->SetRotation(rot + (180.0f * TimeManager::GetDeltaTime()));
