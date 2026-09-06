@@ -28,6 +28,10 @@ public:
 
     ID GetID() const { return id; }
 
+    // True from the moment the entity is destroyed until 
+    // its slot is freed at the end of the frame
+    bool IsMarkedForDestruction() const { return markedForDestruction; }
+
 protected:
     bool markedForDestruction = false;
     ID id;

@@ -33,6 +33,12 @@ private:
     // Called every frame after Update
     virtual void LateUpdate() {}
 
+    // Called the instant the component is marked for destruction (on RemoveComponent(c))
+    virtual void OnMarkedForDestruction() {}
+
+    // Called right before the component is destroyed
+    virtual void OnDestroy() {}
+
     virtual void OnCollisionEnter(Collision& collision) {};
     virtual void OnCollisionStay(Collision& collision) {};
     virtual void OnCollisionExit(Collision& collision) {};

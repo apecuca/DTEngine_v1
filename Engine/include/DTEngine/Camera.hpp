@@ -24,6 +24,12 @@ public:
     Matrix3 GetProjectionMatrix() const;
 
 private:
+    // Removed the main camera pointer as soon as the camera is destroyed, so no
+    // one reads a dead camera during the rest of the frame. ~Camera repeats it
+    // for the paths that free without marking (world swap, shutdown)
+    void OnMarkedForDestruction() override;
+
+private:
     constexpr static float defaultFov = 5.0f;
 
 public:

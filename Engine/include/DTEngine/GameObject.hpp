@@ -77,6 +77,7 @@ public:
         }
 
         component->markedForDestruction = true;
+        component->OnMarkedForDestruction();
     }
 
 private:
@@ -85,9 +86,6 @@ private:
 
     // Destroy all components marked for destruction
     void ProcessComponentDestructionQueue();
-
-    // Returns if the object is marked to be destroyed
-    bool GetMarkedForDestruction() const;
 
     // Non-template bridges to the PoolSystem, implemented in the .cpp so
     // the public header stays free of internal system includes

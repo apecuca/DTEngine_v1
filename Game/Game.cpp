@@ -7,8 +7,10 @@
 #include <DTEngine/WorldManager.hpp>
 #include <DTEngine/RenderingManager.hpp>
 #include <DTEngine/PhysicsManager.hpp>
+#include <DTEngine/Camera.hpp>
 
 #include "SuperComponent.hpp"
+#include "CameraFollow.hpp"
 
 #include <iostream>
 
@@ -54,6 +56,10 @@ Game::Game()
         s->color = Vector4(0.6f, 1.0f, 0.6f, 1.0f);
         r->isKinematic = true;
         r->gravityScale = 0.0f;
+
+        // Camera
+        auto cam = Camera::main->gameObject.AddComponent<CameraFollow>();
+        cam->SetTarget(player->transform);
     });
 
     int secondIndex = WorldManager::RegisterWorld("Second", []() {
@@ -65,7 +71,7 @@ Game::Game()
         auto spr = player->AddComponent<SpriteRenderer>();
         spr->color = Vector4(1.0f, 0.6f, 1.0f, 1.0f);
         spr->renderOrder = 1;
-        player->AddComponent<SuperComponent>();
+        auto super = player->AddComponent<SuperComponent>();
 
         // child
         auto child = WorldManager::Instantiate();
@@ -85,7 +91,10 @@ Game::Game()
         s->color = Vector4(0.6f, 1.0f, 0.6f, 1.0f);
         r->isKinematic = true;
         r->gravityScale = 0.0f;
+
+        // Camera
+        auto cam = Camera::main->gameObject.AddComponent<CameraFollow>();
     });
 
-    WorldManager::LoadWorld(firstIndex);
+    WorldManager::LoadWorld(secondIndex);
 }

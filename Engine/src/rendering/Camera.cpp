@@ -15,6 +15,15 @@ Camera::~Camera()
         main = nullptr;
 }
 
+void Camera::OnMarkedForDestruction()
+{
+    // Clearing main in ~Camera would leave a whole
+    // frame between the mark and the end-of-frame free, where Camera::main
+    // hands out a camera whose transform handle is already invalid
+    if (main == this)
+        main = nullptr;
+}
+
 Camera::Camera(GameObject& _gameObject) :
     Component(_gameObject),
     fov(defaultFov)

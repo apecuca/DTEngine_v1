@@ -11,6 +11,17 @@
 
 using namespace DTEngine;
 
+namespace
+{
+    // Present and not destroyed this frame. Used everywhere activeBodies is
+    // walked: the list only drops a body when its component is destructed, at
+    // the end of the frame, but a marked component's handles die immediately
+    bool IsLiveBody(const Entity* entity)
+    {
+        return entity != nullptr && !entity->IsMarkedForDestruction();
+    }
+}
+
 PhysicsSystem::~PhysicsSystem()
 {
     //
@@ -96,9 +107,11 @@ void PhysicsSystem::RemoveCollider(BoxCollider* col)
 
 void PhysicsSystem::UpdatePhysics()
 {
+    // activeBodies holds raw pointers unregistered only by the destructors, at
+    // the end of the frame. Anything destroyed before that is already dead:
+    // its transform handle is invalid, so it must not be simulated
     for (auto& body : activeBodies)
-        if (body.rb != nullptr) body.rb->UpdatePhysics();
-        //rb->UpdatePhysics();
+        if (IsLiveBody(body.rb)) body.rb->UpdatePhysics();
 
     DetectAndResolveCollisions();
     DispatchCollisionMessages();
@@ -108,11 +121,12 @@ void PhysicsSystem::DetectAndResolveCollisions()
 {
     currentCollisions.clear();
     for (size_t i = 0; i < activeBodies.size(); i++) {
-        // Bodies without a collider (Rigidbody only) can't collide
-        if (activeBodies[i].col == nullptr) continue;
+        // Bodies without a live collider (Rigidbody only, or destroyed
+        // this frame) can't collide
+        if (!IsLiveBody(activeBodies[i].col)) continue;
 
         for (size_t j = i + 1; j < activeBodies.size(); j++) {
-            if (activeBodies[j].col == nullptr) continue;
+            if (!IsLiveBody(activeBodies[j].col)) continue;
 
             POHandler bodyA = activeBodies[i];
             BoxCollider* a = bodyA.col;
@@ -157,9 +171,11 @@ void PhysicsSystem::DetectAndResolveCollisions()
 void PhysicsSystem::ResolveCollision(POHandler& a, POHandler& b,
                                       Vector2 normal, float penetration)
 {
-    // Resolve only against dynamic (non-kinematic) rigidbodies
-    Rigidbody* rbA = (a.rb && !a.rb->isKinematic) ? a.rb : nullptr;
-    Rigidbody* rbB = (b.rb && !b.rb->isKinematic) ? b.rb : nullptr;
+    // Resolve only against live, dynamic (non-kinematic) rigidbodies. A
+    // RemoveComponent<Rigidbody>() can leave a live collider beside a marked
+    // rigidbody, so the liveness of the collider doesn't imply this one's
+    Rigidbody* rbA = (IsLiveBody(a.rb) && !a.rb->isKinematic) ? a.rb : nullptr;
+    Rigidbody* rbB = (IsLiveBody(b.rb) && !b.rb->isKinematic) ? b.rb : nullptr;
 
     // Nothing to resolve if both sides are static or kinematic
     if (!rbA && !rbB) return;
@@ -223,6 +239,10 @@ void PhysicsSystem::DispatchCollisionMessages()
 {
     // ENTER (new this frame) and STAY (persisted from last frame)
     for (auto& curr : currentCollisions) {
+        // A callback earlier in this same dispatch may have destroyed one of
+        // the two objects; the Collision would then carry a dead collider
+        if (!IsLiveBody(curr.a) || !IsLiveBody(curr.b)) continue;
+
         bool wasColliding = false;
         for (auto& prev : previousCollisions)
             if (prev.matches(curr.a, curr.b)) { wasColliding = true; break; }
@@ -237,6 +257,8 @@ void PhysicsSystem::DispatchCollisionMessages()
 
     // EXIT: was colliding last frame but not this frame
     for (auto& prev : previousCollisions) {
+        if (!IsLiveBody(prev.a) || !IsLiveBody(prev.b)) continue;
+
         bool stillColliding = false;
         for (auto& curr : currentCollisions)
             if (curr.matches(prev.a, prev.b)) { stillColliding = true; break; }
@@ -277,7 +299,8 @@ bool PhysicsSystem::Raycast(Vector2 origin, Vector2 direction, float distance, L
 
     for (const auto& body : activeBodies)
     {
-        if (body.col == nullptr) continue;
+        // GetBounds reads gameObject.transform, invalid once destroyed
+        if (!IsLiveBody(body.col)) continue;
         if (!MaskContains(mask, body.col->gameObject.GetLayer())) continue;
 
         Bounds b = body.col->GetBounds();
@@ -308,7 +331,8 @@ bool PhysicsSystem::Raycast(Vector2 origin, Vector2 direction, float distance, L
         // Closest hit so far — subsequent iterations reject anything farther
         closestT = tmin;
         hitCollider = body.col;
-        hitRigidbody = body.rb; // nullptr if no Rigidbody attached
+        // nullptr if no Rigidbody attached, or if it was destroyed this frame
+        hitRigidbody = IsLiveBody(body.rb) ? body.rb : nullptr;
     }
 
     if (hitCollider == nullptr) return false;
@@ -329,7 +353,8 @@ bool PhysicsSystem::OverlapBox(Vector2 origin, Vector2 size, LayerMask mask, std
 
     for (const auto& body : activeBodies)
     {
-        if (body.col == nullptr) continue;
+        // GetBounds reads gameObject.transform, invalid once destroyed
+        if (!IsLiveBody(body.col)) continue;
         if (!MaskContains(mask, body.col->gameObject.GetLayer())) continue;
 
         Bounds b = body.col->GetBounds();
@@ -343,7 +368,8 @@ bool PhysicsSystem::OverlapBox(Vector2 origin, Vector2 size, LayerMask mask, std
                       std::max(b.min.y, std::min(origin.y, b.max.y)));
         float dist = Vector2::Distance(origin, point);
 
-        result.push_back(RaycastHit(body.col, body.rb, dist, point, true));
+        result.push_back(RaycastHit(body.col, IsLiveBody(body.rb) ? body.rb : nullptr,
+                                    dist, point, true));
         found = true;
     }
 

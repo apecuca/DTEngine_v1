@@ -19,7 +19,11 @@ struct EntitySlotRef
     uint32_t* generation = nullptr;
     uint32_t expectedGeneration = 0;
 
+    // Marked but not yet freed. True until the slot is released
     bool IsAlive() const { return ptr != nullptr && *generation == expectedGeneration; }
+
+    // Alive and not marked for destruction
+    bool IsLive() const;
 };
 
 template<typename T>

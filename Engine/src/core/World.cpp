@@ -40,14 +40,23 @@ EntityHandle<GameObject> World::Instantiate(const std::string name)
 
 void World::Destroy(const EntityHandle<GameObject>& obj)
 {
-    GameObject* target = obj.Get();
-    if (target == nullptr)
+    Destroy(obj.Get());
+}
+
+void World::Destroy(GameObject& obj)
+{
+    Destroy(&obj);
+}
+
+void World::Destroy(GameObject* obj)
+{
+    if (obj == nullptr)
         return;
 
     for (auto& ref : objectRefs) {
         if (!ref.IsAlive()) continue;
 
-        if (ref.ptr == target)
+        if (ref.ptr == obj)
             static_cast<GameObject*>(ref.ptr)->MarkForDestruction();
     }
 }
@@ -85,7 +94,7 @@ void World::WorldAwake()
     pendingAwake.clear();
 
     for (auto& ref : vCopy)
-        if (ref.IsAlive())
+        if (ref.IsLive())
             static_cast<GameObject*>(ref.ptr)->InternalAwake();
 
 }
@@ -100,14 +109,14 @@ void World::WorldStart()
     pendingStart.clear();
 
     for (auto& ref : vCopy)
-        if (ref.IsAlive())
+        if (ref.IsLive())
             static_cast<GameObject*>(ref.ptr)->InternalStart();
 }
 
 void World::WorldFixedUpdate()
 {
     for (auto& ref : objectRefs)
-        if (ref.IsAlive())
+        if (ref.IsLive())
             static_cast<GameObject*>(ref.ptr)->InternalFixedUpdate();
 }
 
@@ -118,12 +127,13 @@ void World::WorldUpdate()
     WorldStart();
 
     // Update behaviour
+    // IsLive skips objects destroyed earlier in the current frame
     for (auto& ref : objectRefs)
-        if (ref.IsAlive())
+        if (ref.IsLive())
             static_cast<GameObject*>(ref.ptr)->InternalUpdate();
 
     // Late update behaviour
     for (auto& ref : objectRefs)
-        if (ref.IsAlive())
+        if (ref.IsLive())
             static_cast<GameObject*>(ref.ptr)->InternalLateUpdate();
 }

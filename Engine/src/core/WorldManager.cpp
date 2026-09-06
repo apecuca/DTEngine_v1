@@ -32,3 +32,13 @@ void WorldManager::Destroy(const EntityHandle<GameObject>& object)
 {
     SystemRegistry::GetSystem<WorldSystem>()->GetActiveWorld()->Destroy(object);
 }
+
+void WorldManager::Destroy(GameObject& object)
+{
+    SystemRegistry::GetSystem<WorldSystem>()->GetActiveWorld()->Destroy(object);
+}
+
+void WorldManager::Destroy(GameObject* object)
+{
+    SystemRegistry::GetSystem<WorldSystem>()->GetActiveWorld()->Destroy(object);
+}

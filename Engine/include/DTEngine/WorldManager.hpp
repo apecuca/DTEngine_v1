@@ -26,6 +26,8 @@ public:
     static void LoadWorld(const std::string& name);
     static EntityHandle<GameObject> Instantiate(const std::string& name = "GameObject");
     static void Destroy(const EntityHandle<GameObject>& object);
+    static void Destroy(GameObject& object);
+    static void Destroy(GameObject* object);
 
 private:
     ~WorldManager() = default;

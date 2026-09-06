@@ -15,12 +15,15 @@ using namespace DTEngine;
 
 GameObject::~GameObject()
 {
-    // Components live in the global pool; release them with their owner
     PoolSystem* pool = SystemRegistry::GetSystem<PoolSystem>();
     if (pool != nullptr) {
-        for (auto& ref : componentRefs)
-            if (ref.IsAlive())
-                pool->Release(ref.ptr);
+        // Destroyed whatever wasn't marked before. Safety net
+        for (auto& ref : componentRefs) {
+            if (!ref.IsAlive()) continue;
+
+            static_cast<Component*>(ref.ptr)->OnDestroy();
+            pool->Release(ref.ptr);
+        }
 
         pool->DeleteEntity(transform);
     }
@@ -66,6 +69,16 @@ void GameObject::MarkForDestruction()
         if (!ref.IsAlive()) continue;
         static_cast<Component*>(ref.ptr)->markedForDestruction = true;
     }
+
+    // Notified only once everything above is marked, so a handler 
+    // observes a consistently dead object.
+    // The transform is not notified, it stays outside the component lifecycle
+    std::vector<EntitySlotRef> notifyRefs = componentRefs;
+
+    for (auto& ref : notifyRefs) {
+        if (!ref.IsAlive()) continue;
+        static_cast<Component*>(ref.ptr)->OnMarkedForDestruction();
+    }
 }
 
 void GameObject::ProcessComponentDestructionQueue()
@@ -77,16 +90,16 @@ void GameObject::ProcessComponentDestructionQueue()
     for (auto& ref : componentRefs) {
         if (!ref.IsAlive()) continue;
 
-        if (static_cast<Component*>(ref.ptr)->markedForDestruction)
+        Component* component = static_cast<Component*>(ref.ptr);
+        if (component->markedForDestruction) {
+            // Last call while the component is still constructed. Release runs
+            // its destructor, and a destructor can't dispatch to the override
+            component->OnDestroy();
             pool->Release(ref.ptr);
+        }
     }
 
     std::erase_if(componentRefs, [](const EntitySlotRef& ref) { return !ref.IsAlive(); });
-}
-
-bool GameObject::GetMarkedForDestruction() const
-{
-    return markedForDestruction;
 }
 
 EntitySlotRef GameObject::AddComponentImpl(std::unique_ptr<Component> component)
@@ -137,8 +150,9 @@ std::string GameObject::GetLayer() const
 
 void GameObject::InternalAwake()
 {
+    // Avoid dispatching messages to components destroyed mid-frame
     for (auto& ref : componentRefs) {
-        if (!ref.IsAlive()) continue;
+        if (!ref.IsLive()) continue;
         static_cast<Component*>(ref.ptr)->Awake();
     }
 }
@@ -146,14 +160,14 @@ void GameObject::InternalAwake()
 void GameObject::InternalStart()
 {
     for (auto& ref : componentRefs) {
-        if (!ref.IsAlive()) continue;
+        if (!ref.IsLive()) continue;
         static_cast<Component*>(ref.ptr)->Start();
     }
 }
 void GameObject::InternalFixedUpdate()
 {
     for (auto& ref : componentRefs) {
-        if (!ref.IsAlive()) continue;
+        if (!ref.IsLive()) continue;
         static_cast<Component*>(ref.ptr)->FixedUpdate();
     }
 }
@@ -161,7 +175,7 @@ void GameObject::InternalFixedUpdate()
 void GameObject::InternalUpdate()
 {
     for (auto& ref : componentRefs) {
-        if (!ref.IsAlive()) continue;
+        if (!ref.IsLive()) continue;
         static_cast<Component*>(ref.ptr)->Update();
     }
 }
@@ -169,15 +183,17 @@ void GameObject::InternalUpdate()
 void GameObject::InternalLateUpdate()
 {
     for (auto& ref : componentRefs) {
-        if (!ref.IsAlive()) continue;
+        if (!ref.IsLive()) continue;
         static_cast<Component*>(ref.ptr)->LateUpdate();
     }
 }
 
 void GameObject::ReceiveCollisionMessage(Collision& collision)
 {
+    // A callback may destroy this object, and the
+    // components after it must not be notified any more.
     for (auto& ref : componentRefs) {
-        if (!ref.IsAlive()) continue;
+        if (!ref.IsLive()) continue;
 
         Component* component = static_cast<Component*>(ref.ptr);
         switch (collision.type) {
@@ -199,7 +215,7 @@ void GameObject::ReceiveCollisionMessage(Collision& collision)
 void GameObject::ReceiveSensorMessage(Collision& collision)
 {
     for (auto& ref : componentRefs) {
-        if (!ref.IsAlive()) continue;
+        if (!ref.IsLive()) continue;
 
         Component* component = static_cast<Component*>(ref.ptr);
         switch (collision.type) {

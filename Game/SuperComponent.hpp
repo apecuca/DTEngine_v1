@@ -7,6 +7,8 @@
 #include <DTEngine/Rigidbody.hpp>
 #include <DTEngine/BoxCollider.hpp>
 
+#include "CameraFollow.hpp"
+
 using namespace DTEngine;
 
 class SuperComponent : public Component
@@ -35,6 +37,7 @@ public:
 private:
     EntityHandle<Rigidbody> rb;
     EntityHandle<Transform> child;
+    EntityHandle<CameraFollow> cam;
     
     float moveSpeed = 4.0f;
     float jumpForce = 7.5f;
@@ -43,6 +46,5 @@ private:
     bool grounded = false;
 
     float x = 0.0f;
-    bool cameraFollow = true;
 
 };

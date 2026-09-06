@@ -238,6 +238,9 @@ void RenderingSystem::RenderPass(unsigned int& frameBufferObject, const RenderPa
 
     for (auto& spr : renderers)
     {
+        // Skip renderers who are yet to be destroyed (invalid)
+        if (spr->IsMarkedForDestruction()) continue;
+
         if (renderType == RenderPassType::SOLID) {
             if (!spr->gameObject.clickable) continue;
             spr->RenderCall(viewMat, projMat, solidPassShader.get());

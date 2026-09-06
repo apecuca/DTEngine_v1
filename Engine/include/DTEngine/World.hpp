@@ -23,6 +23,8 @@ public:
 
     // Destroys an object instantiated in the world
     void Destroy(const EntityHandle<GameObject>& obj);
+    void Destroy(GameObject& obj);
+    void Destroy(GameObject* obj);
 
 private:
     // Processes the destruction queue
