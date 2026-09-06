@@ -153,6 +153,12 @@ namespace DTEngine
 {
 
 ///
+/// FORWARD DECLARATIONS
+///
+
+struct Vector2;
+
+///
 /// MISC
 /// 
 
@@ -161,8 +167,19 @@ typedef uint32_t LayerMask;
 // Mask matching every layer
 constexpr LayerMask LAYER_MASK_ALL = ~0u;
 
-// Converts degrees to radians
-constexpr float Radians(float degrees) { return degrees * (PI / 180.0f); }
+///
+/// MATH
+///
+
+namespace DTMath 
+{
+
+    // Converts degrees to radians
+    constexpr float Radians(float degrees) { return degrees * (PI / 180.0f); }
+
+    float Lerp(float a, float b, float t);
+    Vector2 Lerp(Vector2 a, Vector2 b, float t);
+}
 
 ///
 /// VECTORS
@@ -310,9 +327,9 @@ Vector4 operator/ (const Vector4& lhs, float scalar);
 bool operator== (const Vector4& lhs, const Vector4& rhs);
 bool operator!= (const Vector4& lhs, const Vector4& rhs);
 
-//
-// MATRICES
-//
+///
+/// MATRICES
+///
 
 struct Matrix4;
 
@@ -409,6 +426,6 @@ private:
 static_assert(sizeof(Matrix3) == 9 * sizeof(float), "Matrix3 must be 9 contiguous floats");
 static_assert(sizeof(Matrix4) == 16 * sizeof(float), "Matrix4 must be 16 contiguous floats");
 
-}
+} // Namespace DTEngine
 
 #endif

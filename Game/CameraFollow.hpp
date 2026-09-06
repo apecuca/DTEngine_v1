@@ -13,7 +13,8 @@ public:
     virtual ~CameraFollow();
     CameraFollow(GameObject& _gameObject);
 
-    void LateUpdate() override;
+    void Update() override;
+    void FixedUpdate() override;
 
     void SetTarget(EntityHandle<Transform> target);
 

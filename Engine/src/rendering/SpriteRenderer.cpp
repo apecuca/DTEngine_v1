@@ -99,7 +99,7 @@ void SpriteRenderer::RenderCall(const Matrix3& viewMat, const Matrix3& projMat, 
     modelMat = Matrix3::Translate(modelMat, worldPosition);
     // Rotation
     if (worldRotation != 0.0f)
-        modelMat = Matrix3::Rotate(modelMat, Radians(worldRotation));
+        modelMat = Matrix3::Rotate(modelMat, DTMath::Radians(worldRotation));
     
     // Sprite size
     Vector2 spriteSize = spriteInternalSize / sprt.pixelsPerUnit;

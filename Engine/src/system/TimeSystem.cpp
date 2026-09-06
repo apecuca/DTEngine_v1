@@ -4,7 +4,12 @@
 
 #include "GLFW/glfw3.h"
 
+#include <cmath>
+
 using namespace DTEngine;
+
+// To prevent the accumulation of work, let the simulation run slow
+constexpr int MAX_CATCHUP_STEPS = 5;
 
 TimeSystem::~TimeSystem()
 {
@@ -51,4 +56,28 @@ void TimeSystem::UpdateTimeVariables()
 
     deltaTime = newTime - lastTime;
     lastTime = newTime;
+}
+
+int TimeSystem::ConsumeFixedSteps()
+{
+    fixedAccumulator += deltaTime;
+
+    int steps = static_cast<int>(fixedAccumulator / fixedTimeStep);
+
+    if (steps > MAX_CATCHUP_STEPS) {
+        // Clamping the step count alone is not enough, the debt would 
+        // just carry into the next frame and spiral anyway
+        fixedAccumulator = std::fmod(fixedAccumulator, fixedTimeStep);
+        steps = MAX_CATCHUP_STEPS;
+    }
+    else {
+        fixedAccumulator -= steps * fixedTimeStep;
+    }
+
+    return steps;
+}
+
+float TimeSystem::GetInterpolationAlpha() const
+{
+    return (float)(fixedAccumulator / fixedTimeStep);
 }

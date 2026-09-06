@@ -78,7 +78,7 @@ Matrix3 Camera::GetViewMatrix() const
 
     // Undo the camera rotation, then bring the camera back to the origin.
     // Composed, this rotates the world using camPos as the pivot
-    Matrix3 view = Matrix3::Rotate(Matrix3::Identity(), -Radians(camRot));
+    Matrix3 view = Matrix3::Rotate(Matrix3::Identity(), -DTMath::Radians(camRot));
     view = Matrix3::Translate(view, -camPos);
 
     return view;

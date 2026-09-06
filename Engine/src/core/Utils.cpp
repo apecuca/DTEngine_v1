@@ -4,6 +4,7 @@
 
 using namespace DTEngine;
 
+
 //
 // VECTOR2
 //
@@ -853,4 +854,18 @@ bool operator!= (const Matrix4& lhs, const Matrix4& rhs)
     return !(lhs == rhs);
 }
 
-} // namespace DTEngine
+//
+// MATH
+//
+
+float DTMath::Lerp(float a, float b, float t)
+{
+    return a + (b - a) * t;
+}
+
+Vector2 DTMath::Lerp(Vector2 a, Vector2 b, float t)
+{
+    return a + (b - a) * t;
+}
+
+} // Namespace DTEngine

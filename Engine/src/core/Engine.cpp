@@ -52,8 +52,6 @@ void Engine::Run()
     if (!sys_world->IsWorldActive())
         throw std::runtime_error("No world loaded.");
 
-    double fixedTimer = 0.0;
-
     while (!ShouldStop()) {
         
         //
@@ -65,16 +63,15 @@ void Engine::Run()
         sys_input->ReadInputs();
         sys_time->UpdateTimeVariables();
 
-        double fixedTimeStep = sys_time->GetFixedTimeStep();
-        fixedTimer += sys_time->GetDeltaTime();
-        int fixedCatchUpTimes = static_cast<int>(fixedTimer / fixedTimeStep);
-        
-        if (fixedCatchUpTimes >= 1) {
+        // Each physics step gets its own FixedUpdate, so forces applied there
+        // are not swallowed by the first step of a catch-up frame
+        int fixedCatchUpTimes = sys_time->ConsumeFixedSteps();
+
+        for (int i = 0; i < fixedCatchUpTimes; i++) {
             sys_world->FixedUpdateActiveWorld();
 
             // Update active physics bodies
-            for (int i = 0; i < fixedCatchUpTimes; i++)
-                sys_physics->UpdatePhysics();
+            sys_physics->UpdatePhysics();
         }
 
         // Update behaviours
@@ -86,9 +83,6 @@ void Engine::Run()
         // Finish frame
         sys_world->OnEndOfFrame();
         sys_input->OnEndOfFrame();
-
-        for (int i = 0; i < fixedCatchUpTimes; i++)
-            fixedTimer -= fixedTimeStep;
     }
 
     systemRegistry->UnloadEverything();
