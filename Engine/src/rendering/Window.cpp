@@ -55,10 +55,10 @@ void Window::ConfigWindow()
 	glfwSetFramebufferSizeCallback(winPtr, callback_framebufferSize);
 }
 
-void Window::Clear()
+void Window::Clear(float r, float g, float b, float a)
 {
+    glClearColor(r, g, b, a);
     glClear(GL_COLOR_BUFFER_BIT);
-    glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
 }
 
 void Window::SwapBuffers()

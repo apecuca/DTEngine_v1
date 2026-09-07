@@ -216,6 +216,12 @@ void RenderingSystem::RenderCycle()
         // SOLID PASS (clickable objects only — used by IsPositionSolid)
         RenderPass(solidFBO, RenderPassType::SOLID, viewMat, projMat);
     }
+    else {
+        // Solid black screen when there is no camera
+        ClearPass(worldFBO, 0.0f, 0.0f, 0.0f, 1.0f);
+        ClearPass(solidFBO, 1.0f, 0.0f, 0.0f, 1.0f);
+    }
+
 
     // FINAL PASS
     window->Clear();
@@ -244,12 +250,22 @@ void RenderingSystem::RenderPass(unsigned int& frameBufferObject, const RenderPa
         if (renderType == RenderPassType::SOLID) {
             if (!spr->gameObject.clickable) continue;
             spr->RenderCall(viewMat, projMat, solidPassShader.get());
-        } else {
+        }
+        else {
             spr->RenderCall(viewMat, projMat);
         }
     }
 
     // Unbind everything
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+}
+
+void RenderingSystem::ClearPass(unsigned int& frameBufferObject, float r, float g, float b, float a)
+{
+    glBindFramebuffer(GL_FRAMEBUFFER, frameBufferObject);
+
+    window->Clear(r, g, b, a);
+
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
 
